@@ -1,0 +1,186 @@
+<UserControl x:Class="Focus.App.Views.SessionsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Focus.App.Controls"
+             xmlns:loc="clr-namespace:Focus.App.Localization"
+             Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="StatTile" TargetType="Border">
+            <Setter Property="Background" Value="#0F1318" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+        </Style>
+        <Style x:Key="StatLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+        </Style>
+        <Style x:Key="StatValue" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="336" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Background="{StaticResource Brush.Sidebar}" BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="0,0,1,0">
+            <DockPanel>
+                <Border DockPanel.Dock="Top" Padding="16,14,16,10">
+                    <DockPanel>
+                        <TextBlock Text="{Binding [sessions.allSessions], Source={x:Static loc:Loc.Inst}}"
+                                   Style="{StaticResource Text.Subheading}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CountText" Style="{StaticResource Text.Muted}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+                <ListBox x:Name="SessionList" Margin="6,0,6,8" Background="Transparent" BorderThickness="0"
+                         SelectionChanged="OnSessionSelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Text.Caption}"
+                                           Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Muted}"
+                                           Margin="0,3,0,0" FontFamily="{StaticResource Font.Mono}" FontSize="11" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <ScrollViewer x:Name="DetailPanel" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <StackPanel Margin="28,20,24,28" MaxWidth="1120" HorizontalAlignment="Stretch">
+                    <DockPanel Margin="0,0,0,18">
+                        <StackPanel>
+                            <TextBlock x:Name="DetailTitle" Style="{StaticResource Text.Heading}" FontSize="19"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="DetailSubtitle" Style="{StaticResource Text.Caption}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Style="{StaticResource Btn}" Click="OnExportCsv"
+                                    Content="{Binding [sessions.exportCsv], Source={x:Static loc:Loc.Inst}}" />
+                            <Button Style="{StaticResource Btn.Danger}" Margin="8,0,0,0" Click="OnDelete"
+                                    Content="{Binding [common.delete], Source={x:Static loc:Loc.Inst}}" />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <UniformGrid Columns="4">
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.avg], Source={x:Static loc:Loc.Inst}}" />
+                                <TextBlock x:Name="AvgFpsText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}" Text="1% Low" />
+                                <TextBlock x:Name="Low1Text" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}" Text="0.1% Low" />
+                                <TextBlock x:Name="Low01Text" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.stutter], Source={x:Static loc:Loc.Inst}}" />
+                                <TextBlock x:Name="StutterText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.duration], Source={x:Static loc:Loc.Inst}}" />
+                                <TextBlock x:Name="DurationText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.frames], Source={x:Static loc:Loc.Inst}}" />
+                                <TextBlock x:Name="FramesText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}" Text="Median" />
+                                <TextBlock x:Name="MedianText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatTile}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource StatLabel}" Text="Max" />
+                                <TextBlock x:Name="MaxText" Style="{StaticResource StatValue}" Text="—" />
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <Border Style="{StaticResource Card}" Margin="0,6,0,12" Padding="18,14,18,14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="220" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding [sessions.compare], Source={x:Static loc:Loc.Inst}}"
+                                       Style="{StaticResource Text.SectionLabel}" VerticalAlignment="Center"
+                                       Margin="0,0,14,0" />
+                            <ComboBox x:Name="CompareCombo" Grid.Column="1" Height="28" FontSize="11.5"
+                                      SelectionChanged="OnCompareChanged" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right"
+                                        VerticalAlignment="Center">
+                                <TextBlock Text="FPS" Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="CompareFpsText" Style="{StaticResource Text.Numeric}" Margin="0,0,16,0" />
+                                <TextBlock Text="1% Low" Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="CompareLowText" Style="{StaticResource Text.Numeric}" Margin="0,0,16,0" />
+                                <TextBlock Text="Stutter" Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="CompareStutterText" Style="{StaticResource Text.Numeric}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,0" Padding="18,16,18,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock Text="{Binding [sessions.timeline], Source={x:Static loc:Loc.Inst}}"
+                                           Style="{StaticResource Text.SectionLabel}" />
+                                <TextBlock Text="{Binding [sessions.spikeHint], Source={x:Static loc:Loc.Inst}}"
+                                           Style="{StaticResource Text.Muted}" HorizontalAlignment="Right" />
+                            </DockPanel>
+                            <ui:FrameTimeChart x:Name="Chart" Height="300" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border x:Name="EmptyState" Background="Transparent">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360">
+                    <TextBlock Text="{Binding [sessions.empty], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.Subheading}" HorizontalAlignment="Center" />
+                    <TextBlock Text="{Binding [sessions.emptyHint], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.Caption}" TextAlignment="Center" TextWrapping="Wrap"
+                               Margin="0,8,0,16" />
+                    <Button Style="{StaticResource Btn.Primary}" HorizontalAlignment="Center" Click="OnGoToDashboard"
+                            Content="{Binding [sessions.goRecord], Source={x:Static loc:Loc.Inst}}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

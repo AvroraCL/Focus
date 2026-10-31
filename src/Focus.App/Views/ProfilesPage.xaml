@@ -1,0 +1,41 @@
+<UserControl x:Class="Focus.App.Views.ProfilesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Focus.App.Localization"
+             Background="Transparent">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,18,22,28" MaxWidth="1240" HorizontalAlignment="Stretch">
+            <Grid Margin="0,2,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding [profiles.myProfileList], Source={x:Static loc:Loc.Inst}}"
+                           Style="{StaticResource Text.SectionLabel}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource Btn}" Click="OnImport"
+                            Content="{Binding [profiles.import], Source={x:Static loc:Loc.Inst}}" />
+                    <Button Style="{StaticResource Btn.Primary}" Margin="8,0,0,0" Click="OnNewProfile"
+                            Content="{Binding [profiles.new], Source={x:Static loc:Loc.Inst}}" />
+                </StackPanel>
+            </Grid>
+
+            <WrapPanel x:Name="ProfileGrid" />
+
+            <Border x:Name="EmptyState" Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12"
+                    Padding="24" Margin="0,0,0,18">
+                <StackPanel>
+                    <TextBlock Text="{Binding [profiles.empty], Source={x:Static loc:Loc.Inst}}"
+                               FontSize="14" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding [profiles.emptyHint], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.Caption}" Margin="0,5,0,0" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding [profiles.presets], Source={x:Static loc:Loc.Inst}}"
+                       Style="{StaticResource Text.SectionLabel}" Margin="2,10,0,12" />
+            <WrapPanel x:Name="PresetGrid" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

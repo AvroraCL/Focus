@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <RootNamespace>Focus.App</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>Focus</AssemblyName>
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Focus.Core\Focus.Core.csproj" />
+    <ProjectReference Include="..\Focus.Telemetry\Focus.Telemetry.csproj" />
+    <ProjectReference Include="..\Focus.Hud\Focus.Hud.csproj" />
+    <ProjectReference Include="..\Focus.Overlay\Focus.Overlay.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="CopyOverlayBuildOutput" AfterTargets="Build">
+    <ItemGroup>
+      <OverlayFiles Include="$(MSBuildThisFileDirectory)..\Focus.Overlay\bin\$(Configuration)\net10.0-windows\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(OverlayFiles)" DestinationFolder="$(OutDir)overlay\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

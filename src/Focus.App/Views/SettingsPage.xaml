@@ -1,0 +1,231 @@
+<UserControl x:Class="Focus.App.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Focus.App.Localization"
+             Background="Transparent">
+    <UserControl.Resources>
+        <Style x:Key="RowLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.Text}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="RowHint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,2,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Margin="28,18,22,28" MaxWidth="880" HorizontalAlignment="Left">
+            <!-- general -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.general], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.language], Source={x:Static loc:Loc.Inst}}" />
+                        <ComboBox x:Name="LanguageCombo" Grid.Column="1" Width="220" HorizontalAlignment="Left"
+                                  SelectionChanged="OnLanguageChanged" />
+                    </Grid>
+                    <CheckBox x:Name="CloseToTrayCheck" Content="{Binding [settings.closeToTray], Source={x:Static loc:Loc.Inst}}"
+                              Checked="OnCloseToTrayChanged" Unchecked="OnCloseToTrayChanged" />
+                </StackPanel>
+            </Border>
+
+            <!-- capture -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.capture], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.hardwareInterval], Source={x:Static loc:Loc.Inst}}" />
+                        <ComboBox x:Name="HardwareIntervalCombo" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  SelectionChanged="OnHardwareIntervalChanged" />
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.uiRefresh], Source={x:Static loc:Loc.Inst}}" />
+                        <ComboBox x:Name="UiRefreshCombo" Grid.Column="1" Width="140" HorizontalAlignment="Left"
+                                  SelectionChanged="OnUiRefreshChanged" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- overlay -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.overlay], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <CheckBox x:Name="OnlyWhenFocusedCheck"
+                              Content="{Binding [settings.onlyWhenFocused], Source={x:Static loc:Loc.Inst}}"
+                              Checked="OnOnlyWhenFocusedChanged" Unchecked="OnOnlyWhenFocusedChanged" />
+                    <TextBlock Style="{StaticResource RowHint}" Margin="24,6,0,0"
+                               Text="{Binding [settings.overlayHint], Source={x:Static loc:Loc.Inst}}" />
+                </StackPanel>
+            </Border>
+
+            <!-- recording -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.recording], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <CheckBox x:Name="AutoRecordCheck"
+                              Content="{Binding [settings.autoRecord], Source={x:Static loc:Loc.Inst}}"
+                              Checked="OnAutoRecordChanged" Unchecked="OnAutoRecordChanged" />
+                </StackPanel>
+            </Border>
+
+            <!-- hotkeys -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.hotkeys], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.toggleHud], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="ToggleHudKeys" Grid.Column="1" Style="{StaticResource Text.Numeric}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="2" Style="{StaticResource Btn}" Height="28" FontSize="11.5"
+                                Content="{Binding [settings.changeKey], Source={x:Static loc:Loc.Inst}}"
+                                Tag="ToggleHud" Click="OnCaptureHotkey" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.toggleRecording], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="ToggleRecordingKeys" Grid.Column="1" Style="{StaticResource Text.Numeric}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="2" Style="{StaticResource Btn}" Height="28" FontSize="11.5"
+                                Content="{Binding [settings.changeKey], Source={x:Static loc:Loc.Inst}}"
+                                Tag="ToggleRecording" Click="OnCaptureHotkey" />
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.cycleProfile], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="CycleProfileKeys" Grid.Column="1" Style="{StaticResource Text.Numeric}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="2" Style="{StaticResource Btn}" Height="28" FontSize="11.5"
+                                Content="{Binding [settings.changeKey], Source={x:Static loc:Loc.Inst}}"
+                                Tag="CycleProfile" Click="OnCaptureHotkey" />
+                    </Grid>
+
+                    <TextBlock x:Name="HotkeyHint" Style="{StaticResource RowHint}" Margin="0,12,0,0" Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <!-- permissions / telemetry -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.permissions], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.permissions], Source={x:Static loc:Loc.Inst}}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="AdminDot" Width="7" Height="7" VerticalAlignment="Center" />
+                            <TextBlock x:Name="AdminStatus" Style="{StaticResource RowHint}" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <Button x:Name="ElevateButton" Grid.Column="2" Style="{StaticResource Btn}" Height="28"
+                                FontSize="11.5" Click="OnElevate"
+                                Content="{Binding [settings.restartAdmin], Source={x:Static loc:Loc.Inst}}" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding [settings.telemetry], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,8,0,12" />
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.etw], Source={x:Static loc:Loc.Inst}}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="EtwDot" Width="7" Height="7" VerticalAlignment="Center" />
+                            <TextBlock x:Name="EtwStatus" Style="{StaticResource RowHint}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.hardware], Source={x:Static loc:Loc.Inst}}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="HardwareDot" Width="7" Height="7" VerticalAlignment="Center" />
+                            <TextBlock x:Name="HardwareStatus" Style="{StaticResource RowHint}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- about -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.about], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.version], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="VersionText" Grid.Column="1" Style="{StaticResource Text.Numeric}" />
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource RowLabel}"
+                                   Text="{Binding [settings.dataFolder], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="DataFolderText" Grid.Column="1" Style="{StaticResource Text.Numeric}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <Button Grid.Column="2" Style="{StaticResource Btn}" Height="28" FontSize="11.5" Click="OnOpenDataFolder"
+                                Content="{Binding [settings.openFolder], Source={x:Static loc:Loc.Inst}}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
