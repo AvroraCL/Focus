@@ -60,6 +60,7 @@ public partial class DashboardPage : UserControl
         TargetNameText.Text = hasTarget ? snapshot.TargetName : Loc.Inst["dashboard.noTarget"];
         NoTargetButton.Visibility = Visibility.Visible;
         NoTargetButton.Content = Loc.Inst[hasTarget ? "dashboard.switchProcess" : "dashboard.selectProcess"];
+        DetachButton.Visibility = hasTarget ? Visibility.Visible : Visibility.Collapsed;
 
         double? fps = snapshot.Get(MetricId.Fps);
         bool live = fps is > 0;
@@ -190,6 +191,12 @@ public partial class DashboardPage : UserControl
             _services.AttachTo(process);
             Update();
         }
+    }
+
+    private void OnDetachClick(object sender, RoutedEventArgs e)
+    {
+        _services.Detach();
+        Update();
     }
 
     private void OnToggleOverlay(object sender, RoutedEventArgs e)
