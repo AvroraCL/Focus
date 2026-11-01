@@ -117,13 +117,15 @@
                         </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource StatLabel}" Text="Median" />
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.median], Source={x:Static loc:Loc.Inst}}" />
                                 <TextBlock x:Name="MedianText" Style="{StaticResource StatValue}" Text="—" />
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatTile}">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource StatLabel}" Text="Max" />
+                                <TextBlock Style="{StaticResource StatLabel}"
+                                           Text="{Binding [sessions.max], Source={x:Static loc:Loc.Inst}}" />
                                 <TextBlock x:Name="MaxText" Style="{StaticResource StatValue}" Text="—" />
                             </StackPanel>
                         </Border>
@@ -149,7 +151,8 @@
                                 <TextBlock Text="1% Low" Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
                                            VerticalAlignment="Center" />
                                 <TextBlock x:Name="CompareLowText" Style="{StaticResource Text.Numeric}" Margin="0,0,16,0" />
-                                <TextBlock Text="Stutter" Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
+                                <TextBlock Text="{Binding [sessions.stutter], Source={x:Static loc:Loc.Inst}}"
+                                           Style="{StaticResource Text.Caption}" Margin="0,0,6,0"
                                            VerticalAlignment="Center" />
                                 <TextBlock x:Name="CompareStutterText" Style="{StaticResource Text.Numeric}" />
                             </StackPanel>

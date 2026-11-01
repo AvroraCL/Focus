@@ -34,6 +34,7 @@ public partial class EditorPage : UserControl
         Canvas.BeginMutation += PushUndo;
         Canvas.Changed += OnCanvasChanged;
         Canvas.SelectionChanged += OnCanvasSelectionChanged;
+        Canvas.PreviewMouseRightButtonDown += OnCanvasRightClick;
         Properties.ValueChanged += OnPropertyChanged;
 
         _autosave = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(1400) };
@@ -175,6 +176,42 @@ public partial class EditorPage : UserControl
     }
 
     private bool _switchingProfile;
+    private List<ElementRow> _rows = new();
+
+    private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
+    {
+        var element = Canvas.HitTest(e.GetPosition(Canvas));
+        if (element is null) return;
+
+        if (!_selection.Contains(element.Id))
+        {
+            _selection.Clear();
+            _selection.Add(element.Id);
+            Canvas.SetSelection(new[] { element.Id });
+            BuildProperties();
+            UpdateStatus();
+            SyncLayerSelection();
+        }
+
+        var menu = new ContextMenu { PlacementTarget = Canvas };
+        menu.Items.Add(MenuItem(Loc.Inst["common.duplicate"], () => DuplicateSelection()));
+        menu.Items.Add(MenuItem(Loc.Inst["common.delete"], () => DeleteSelection()));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(MenuItem(Loc.Inst["editor.group"], () => GroupSelection()));
+        menu.Items.Add(MenuItem(Loc.Inst["editor.ungroup"], () => UngroupSelection()));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(MenuItem(Loc.Inst["editor.bringForward"], () => ChangeZOrder(1)));
+        menu.Items.Add(MenuItem(Loc.Inst["editor.sendBackward"], () => ChangeZOrder(-1)));
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
+    private MenuItem MenuItem(string header, Action action)
+    {
+        var item = new MenuItem { Header = header };
+        item.Click += (_, _) => action();
+        return item;
+    }
 
     private void OnExternalProfileChanged()
     {
@@ -371,15 +408,20 @@ public partial class EditorPage : UserControl
     private void RebuildLayerList()
     {
         _loading = true;
-        var rows = _profile.Elements
+        _rows = _profile.Elements
             .OrderByDescending(e => e.ZIndex)
             .Select(e => new ElementRow(e))
             .ToList();
-        ElementList.ItemsSource = rows;
-        var match = rows.FirstOrDefault(r => _selection.Contains(r.Element.Id));
+        ElementList.ItemsSource = _rows;
+        var match = _rows.FirstOrDefault(r => _selection.Contains(r.Element.Id));
         ElementList.SelectedItem = match;
         ElementCountText.Text = _profile.Elements.Count.ToString();
         _loading = false;
+    }
+
+    private void RefreshLayerRows()
+    {
+        foreach (var row in _rows) row.Refresh();
     }
 
     private void UpdateStatus()
@@ -425,7 +467,7 @@ public partial class EditorPage : UserControl
         _profile.Normalize();
         Canvas.InvalidateVisual();
         Canvas.RefreshSelection();
-        RebuildLayerList();
+        RefreshLayerRows();
         UpdateStatus();
         MarkDirty();
         SchedulePreview();
@@ -1307,11 +1349,18 @@ public partial class EditorPage : UserControl
     }
 }
 
-public sealed class ElementRow
+public sealed class ElementRow : System.ComponentModel.INotifyPropertyChanged
 {
     public ElementRow(HudElement element) => Element = element;
 
     public HudElement Element { get; }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    public void Refresh()
+    {
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(string.Empty));
+    }
 
     public string Name => Element.Name;
 

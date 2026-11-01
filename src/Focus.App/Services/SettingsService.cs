@@ -57,13 +57,44 @@ public sealed class SettingsService
         {
             DataPaths.EnsureCreated();
             var json = JsonSerializer.Serialize(Current, Options);
-            if (File.Exists(DataPaths.SettingsFile))
+            var path = DataPaths.SettingsFile;
+
+            if (File.Exists(path))
             {
-                File.Copy(DataPaths.SettingsFile, DataPaths.SettingsBackup, overwrite: true);
+                try
+                {
+                    File.Copy(path, DataPaths.SettingsBackup, overwrite: true);
+                }
+                catch (Exception ex)
+                {
+                    DataPaths.AppendLog("settings backup failed: " + ex.Message);
+                }
             }
-            var temp = DataPaths.SettingsFile + ".tmp";
+
+            var temp = path + ".tmp";
             File.WriteAllText(temp, json);
-            File.Move(temp, DataPaths.SettingsFile, overwrite: true);
+
+            // Antivirus / indexing services sometimes hold the file for a few milliseconds.
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                try
+                {
+                    File.Move(temp, path, overwrite: true);
+                    return;
+                }
+                catch (IOException) when (attempt < 3)
+                {
+                    Thread.Sleep(40);
+                }
+                catch (UnauthorizedAccessException) when (attempt < 3)
+                {
+                    Thread.Sleep(40);
+                }
+            }
+
+            // Last resort: write in place so the user's settings are never silently lost.
+            File.WriteAllText(path, json);
+            try { File.Delete(temp); } catch { /* ignore */ }
         }
         catch (Exception ex)
         {

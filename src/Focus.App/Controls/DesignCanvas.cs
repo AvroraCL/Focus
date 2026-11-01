@@ -717,6 +717,9 @@ public sealed class DesignCanvas : FrameworkElement
 
     public void SetSpaceDown(bool down) => _spaceDown = down;
 
+    /// <summary>Element under a point in this control's coordinates, if any.</summary>
+    public HudElement? HitTest(Point screenPoint) => HitElement(ScreenToCanvas(screenPoint));
+
     private HudElement? HitElement(Point canvasPoint)
     {
         if (Profile is null) return null;

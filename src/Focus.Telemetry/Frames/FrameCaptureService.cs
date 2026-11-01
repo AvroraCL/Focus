@@ -22,11 +22,9 @@ public sealed class FrameCaptureService : IDisposable
     private readonly object _gate = new();
     private TraceEventSession? _session;
     private Task? _processing;
-    private Thread? _watchdog;
     private volatile bool _running;
     private volatile int _eventsSeen;
     private volatile int _presentsSeen;
-    private bool _usingKeywordFilter = true;
 
     public event Action<int, double>? Present;
 
@@ -61,7 +59,7 @@ public sealed class FrameCaptureService : IDisposable
                     StopOnDispose = true,
                     BufferSizeMB = 4,
                 };
-                EnableProvider(_usingKeywordFilter);
+                EnableProvider();
                 _session.Source.AllEvents += OnEvent;
                 _running = true;
                 _processing = Task.Factory.StartNew(
@@ -69,8 +67,9 @@ public sealed class FrameCaptureService : IDisposable
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default);
-                _watchdog = new Thread(Watchdog) { IsBackground = true, Name = "Focus-ETW-Watchdog" };
-                _watchdog.Start();
+                global::System.IO.File.AppendAllText(
+                    global::System.IO.Path.Combine(global::System.IO.Path.GetTempPath(), "focus-etw.log"),
+                    $"{DateTime.Now:HH:mm:ss.fff}  session started, event-id filter for Present_Info{Environment.NewLine}");
                 return true;
             }
             catch (Exception ex)
@@ -84,51 +83,19 @@ public sealed class FrameCaptureService : IDisposable
 
     private string SessionName => "Focus-FrameCapture-" + Environment.ProcessId;
 
-    private void EnableProvider(bool keywordFilter)
+    private void EnableProvider()
     {
         if (_session is null) return;
-        // The Present keyword keeps the session cheap; if the platform ignores it we fall back to
-        // capturing every DxgKrnl event and filter by event id in the callback.
-        if (!keywordFilter)
-        {
-            _session.EnableProvider(DxgKrnlProvider, TraceEventLevel.Verbose, 0UL);
-            return;
-        }
 
-        ulong keywords = KeywordOverride != 0 ? KeywordOverride : 0UL;
+        // Keywords do not match Present_Info on Windows 10; the kernel-level event id filter is what
+        // keeps the session quiet, so every other DxgKrnl event is dropped before it reaches us.
+        ulong keywords = KeywordOverride;
         // Kernel-level event id filtering keeps the session quiet: only Present_Info is delivered.
         var options = new TraceEventProviderOptions
         {
             EventIDsToEnable = new List<int> { PresentEventId },
         };
         _session.EnableProvider(DxgKrnlProvider, TraceEventLevel.Verbose, keywords, options);
-    }
-
-    private void Watchdog()
-    {
-        // If nothing at all arrives we are most likely filtering out the Present events.
-        DateTime start = DateTime.UtcNow;
-        while (_running)
-        {
-            Thread.Sleep(2000);
-            if (!_running) return;
-            if (_presentsSeen == 0 && _eventsSeen == 0 && DateTime.UtcNow - start > TimeSpan.FromSeconds(6) && _usingKeywordFilter)
-            {
-                try
-                {
-                    global::System.IO.File.AppendAllText(
-                        global::System.IO.Path.Combine(global::System.IO.Path.GetTempPath(), "focus-etw.log"),
-                        $"{DateTime.Now:HH:mm:ss.fff}  keyword filter produced no events, falling back{Environment.NewLine}");
-                    _usingKeywordFilter = false;
-                    EnableProvider(false);
-                }
-                catch
-                {
-                    // Keep running with whatever we have.
-                }
-                start = DateTime.UtcNow;
-            }
-        }
     }
 
     private void OnEvent(TraceEvent data)
