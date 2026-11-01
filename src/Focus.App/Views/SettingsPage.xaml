@@ -19,6 +19,8 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
         <StackPanel Margin="28,18,22,28" MaxWidth="880" HorizontalAlignment="Left">
+            <TextBlock x:Name="SavedIndicator" HorizontalAlignment="Right" Margin="0,-6,0,6" FontSize="11.5"
+                       Foreground="{StaticResource Brush.Success}" Opacity="0" />
             <!-- general -->
             <Border Style="{StaticResource Card}" Margin="0,0,0,14">
                 <StackPanel>

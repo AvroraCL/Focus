@@ -223,6 +223,10 @@ public sealed class OverlayWindow : Window
                 x = bounds.Left + ox; y = bounds.Top + oy; break;
         }
 
+        // Never let an oversized HUD drift completely off the display.
+        x = Math.Clamp(x, bounds.Left - width + 48, bounds.Right - 48);
+        y = Math.Clamp(y, bounds.Top - height + 48, bounds.Bottom - 48);
+
         _visible = visible;
         string key = $"{x:F0}:{y:F0}:{width:F0}:{height:F0}:{visible}";
         if (key == _lastPlacement) return;

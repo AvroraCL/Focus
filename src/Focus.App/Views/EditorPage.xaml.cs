@@ -927,7 +927,7 @@ public partial class EditorPage : UserControl
 
         Properties.AddSection(Loc.Inst["editor.gameBinding"]);
         Properties.AddText(Loc.Inst["profiles.bindGame"], _profile.GameExecutable ?? string.Empty,
-            v => _profile.GameExecutable = string.IsNullOrWhiteSpace(v) ? null : v.Trim(), "game.exe");
+            v => _profile.GameExecutable = Services.ProfileStore.NormalizeGameName(v), "game.exe");
         Properties.AddHint(Loc.Inst["profiles.bindHint"]);
     }
 

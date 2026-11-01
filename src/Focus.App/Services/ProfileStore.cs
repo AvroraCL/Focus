@@ -156,10 +156,28 @@ public sealed class ProfileStore
 
     public HudProfile? FindByGame(string? executable)
     {
-        if (string.IsNullOrWhiteSpace(executable)) return null;
+        string? name = NormalizeGameName(executable);
+        if (name is null) return null;
         return _custom.FirstOrDefault(p =>
-            !string.IsNullOrWhiteSpace(p.GameExecutable) &&
-            string.Equals(p.GameExecutable, executable, StringComparison.OrdinalIgnoreCase));
+            string.Equals(NormalizeGameName(p.GameExecutable), name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Accepts "game", "game.exe" or "C:\Games\game.exe" and returns "game.exe".</summary>
+    public static string? NormalizeGameName(string? executable)
+    {
+        if (string.IsNullOrWhiteSpace(executable)) return null;
+        string name = executable.Trim().Trim('"');
+        try
+        {
+            name = Path.GetFileName(name);
+        }
+        catch
+        {
+            // keep the raw value
+        }
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name += ".exe";
+        return name;
     }
 
     public HudProfile? DefaultProfile

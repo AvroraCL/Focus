@@ -108,6 +108,13 @@ public partial class SettingsPage : UserControl
     {
         if (_loading) return;
         _services.ApplySettings();
+        SavedIndicator.Text = Loc.Inst["settings.saved"];
+        SavedIndicator.Opacity = 1;
+        var fade = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(900))
+        {
+            BeginTime = TimeSpan.FromMilliseconds(1400),
+        };
+        SavedIndicator.BeginAnimation(OpacityProperty, fade);
     }
 
     private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)

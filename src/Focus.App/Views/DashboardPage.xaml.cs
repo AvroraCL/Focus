@@ -21,8 +21,12 @@ public partial class DashboardPage : UserControl
     {
         _services = services;
         InitializeComponent();
-        _timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(150) };
-        _timer.Tick += (_, _) => Update();
+        _timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = RefreshInterval() };
+        _timer.Tick += (_, _) =>
+        {
+            if (!IsVisible) return;
+            Update();
+        };
         _timer.Start();
 
         _services.TargetChanged += Update;
@@ -33,10 +37,17 @@ public partial class DashboardPage : UserControl
 
         Loaded += (_, _) =>
         {
+            _timer.Interval = RefreshInterval();
             Update();
             if (!_timer.IsEnabled) _timer.Start();
         };
         Unloaded += (_, _) => _timer.Stop();
+    }
+
+    private TimeSpan RefreshInterval()
+    {
+        int hz = Math.Clamp(_services.Settings.Current.UiRefreshHz, 5, 20);
+        return TimeSpan.FromMilliseconds(1000.0 / hz);
     }
 
     private void Update()

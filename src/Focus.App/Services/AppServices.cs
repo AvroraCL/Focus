@@ -87,6 +87,7 @@ public sealed class AppServices : IDisposable
         // or applies an explicit game binding.
         if (Telemetry.TargetPid != game.Pid && (bound is not null || Telemetry.TargetPid == 0))
         {
+            if (IsRecording) StopRecording();
             Telemetry.SetTarget(game.Pid, game.Name, game.ExecutablePath);
             TargetChanged?.Invoke();
         }
@@ -98,6 +99,7 @@ public sealed class AppServices : IDisposable
 
     public void AttachTo(ProcessInfo process)
     {
+        if (IsRecording && Telemetry.TargetPid != process.Pid) StopRecording();
         Telemetry.SetTarget(process.Pid, process.Name, process.ExecutablePath);
         Settings.Current.LastTargetExecutable = process.Name + ".exe";
         Settings.Save();
