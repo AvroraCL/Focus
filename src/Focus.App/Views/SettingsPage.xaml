@@ -202,6 +202,22 @@
                 </StackPanel>
             </Border>
 
+            <!-- diagnostics -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding [settings.diagnostics], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,14" />
+                    <TextBlock Text="{Binding [settings.diagnosticsHint], Source={x:Static loc:Loc.Inst}}"
+                               Style="{StaticResource RowHint}" Margin="0,0,0,12" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource Btn}" Height="28" FontSize="11.5" Click="OnCopyDiagnostics"
+                                Content="{Binding [settings.copyDiagnostics], Source={x:Static loc:Loc.Inst}}" />
+                        <TextBlock x:Name="DiagnosticsState" Style="{StaticResource RowHint}" Margin="10,0,0,0"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- about -->
             <Border Style="{StaticResource Card}">
                 <StackPanel>

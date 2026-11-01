@@ -242,6 +242,35 @@ public partial class SettingsPage : UserControl
         }
     }
 
+    private void OnCopyDiagnostics(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var telemetry = _services.Telemetry;
+            var lines = new List<string>
+            {
+                $"Focus {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version}",
+                $"OS: {Environment.OSVersion.VersionString} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})",
+                $"Elevated: {_services.IsElevated}",
+                $"ETW running: {telemetry.Capture.IsRunning}",
+                $"Hardware running: {telemetry.Hardware.IsRunning}",
+                $"Target: {telemetry.TargetName} ({telemetry.TargetPid})",
+                $"Capture: {telemetry.DiagnosticsString()}",
+                $"Overlay running: {_services.Overlay.IsOverlayRunning}, visible: {_services.OverlayVisible}",
+                $"Profiles: {_services.Profiles.Custom.Count}, sessions: {_services.Sessions.Summaries.Count}",
+                $"Data: {DataPaths.Root}",
+            };
+            System.Windows.Clipboard.SetText(string.Join(Environment.NewLine, lines));
+            DiagnosticsState.Text = Loc.Inst["settings.diagnosticsCopied"];
+            DiagnosticsState.Foreground = (Brush)FindResource("Brush.Success");
+        }
+        catch (Exception ex)
+        {
+            DiagnosticsState.Text = ex.Message;
+            DiagnosticsState.Foreground = (Brush)FindResource("Brush.Danger");
+        }
+    }
+
     private void OnOpenDataFolder(object sender, RoutedEventArgs e)
     {
         try
