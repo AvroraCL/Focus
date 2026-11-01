@@ -75,7 +75,8 @@ public sealed class AppServices : IDisposable
 
     private void OnTargetLost(int pid, string name)
     {
-        if (IsRecording) StopRecording();
+        // The target is already cleared at this point, so pass the identity explicitly.
+        if (IsRecording) StopRecording(name, pid);
         TargetChanged?.Invoke();
     }
 
@@ -138,11 +139,13 @@ public sealed class AppServices : IDisposable
         RecordingChanged?.Invoke();
     }
 
-    public Core.Sessions.PerformanceSession? StopRecording()
+    public Core.Sessions.PerformanceSession? StopRecording(string? processName = null, int? processId = null)
     {
         if (!IsRecording) return null;
-        string name = $"{Telemetry.TargetName} {DateTime.Now:yyyy-MM-dd HH:mm}";
-        var session = Telemetry.Recorder.Stop(name, Telemetry.TargetName, Telemetry.TargetPid, ActiveProfile.Id);
+        string targetName = processName ?? Telemetry.TargetName;
+        int targetPid = processId ?? Telemetry.TargetPid;
+        string name = $"{targetName} {DateTime.Now:yyyy-MM-dd HH:mm}";
+        var session = Telemetry.Recorder.Stop(name, targetName, targetPid, ActiveProfile.Id);
         try
         {
             Sessions.Save(session);

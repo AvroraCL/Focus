@@ -202,6 +202,15 @@ public partial class SettingsPage : UserControl
         if (binding.VirtualKey == 0) return;
         binding.Normalize();
 
+        bool hasModifier = binding.Control || binding.Alt || binding.Shift || binding.Win;
+        bool isFunctionKey = binding.VirtualKey is >= 0x70 and <= 0x87;
+        if (!hasModifier && !isFunctionKey)
+        {
+            HotkeyHint.Foreground = (Brush)FindResource("Brush.Warning");
+            HotkeyHint.Text = Loc.Inst["settings.needModifier"];
+            return;
+        }
+
         switch (_awaitingHotkey)
         {
             case "ToggleHud": _services.Settings.Current.Hotkeys.ToggleHud = binding; break;

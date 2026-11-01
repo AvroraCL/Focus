@@ -247,7 +247,11 @@ public partial class EditorPage : UserControl
             Title = Loc.Inst["profiles.import"],
         };
         if (dialog.ShowDialog() != true) return;
-        if (!_services.Profiles.Import(dialog.FileName, out var profile, out _) || profile is null) return;
+        if (!_services.Profiles.Import(dialog.FileName, out var profile, out var error) || profile is null)
+        {
+            MessageBox.Show(error ?? Loc.Inst["msg.invalidProfile"], Loc.Inst["msg.importFailed"]);
+            return;
+        }
         _services.SetActiveProfile(profile);
         LoadProfileChoices();
         LoadProfile(profile);
