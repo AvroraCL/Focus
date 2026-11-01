@@ -245,6 +245,8 @@ public static class Strings
         ["sessions.summary"] = "统计摘要",
         ["sessions.deleteConfirm"] = "确定删除这个会话记录吗？此操作无法撤销。",
         ["sessions.spikeHint"] = "高于中位数 2 倍的帧被视为卡顿帧。",
+        ["sessions.noSpikes"] = "本次会话没有出现明显卡顿。",
+        ["sessions.frameAt"] = "第 {0} 帧 · {1}",
 
         ["settings.title"] = "设置",
         ["settings.general"] = "通用",
@@ -336,6 +338,7 @@ public static class Strings
         ["ui.refresh"] = "刷新",
         ["editor.gameBinding"] = "游戏关联",
         ["sessions.allSessions"] = "全部会话",
+        ["sessions.compare"] = "对比",
         ["sessions.median"] = "中位帧时间",
         ["sessions.max"] = "最大帧时间",
         ["sessions.noBaseline"] = "不与其它会话对比",
@@ -619,6 +622,8 @@ public static class Strings
         ["sessions.summary"] = "Summary",
         ["sessions.deleteConfirm"] = "Delete this session? This cannot be undone.",
         ["sessions.spikeHint"] = "Frames slower than 2× the median are counted as stutters.",
+        ["sessions.noSpikes"] = "No noticeable stutters in this session.",
+        ["sessions.frameAt"] = "Frame {0} · {1}",
 
         ["settings.title"] = "Settings",
         ["settings.general"] = "General",
@@ -710,6 +715,7 @@ public static class Strings
         ["ui.refresh"] = "Refresh",
         ["editor.gameBinding"] = "Game association",
         ["sessions.allSessions"] = "All sessions",
+        ["sessions.compare"] = "Compare",
         ["sessions.median"] = "Median frame",
         ["sessions.max"] = "Max frame",
         ["sessions.noBaseline"] = "No comparison",

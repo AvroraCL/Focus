@@ -170,6 +170,14 @@
                             <ui:FrameTimeChart x:Name="Chart" Height="300" />
                         </StackPanel>
                     </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="18,14,18,16">
+                        <StackPanel>
+                            <TextBlock Text="{Binding [sessions.spikes], Source={x:Static loc:Loc.Inst}}"
+                                       Style="{StaticResource Text.SectionLabel}" Margin="0,0,0,8" />
+                            <StackPanel x:Name="SpikeList" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
 

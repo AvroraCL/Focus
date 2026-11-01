@@ -47,6 +47,7 @@ public partial class SessionsPage : UserControl
 
         SessionList.ItemsSource = items;
         CountText.Text = items.Count.ToString();
+        if (items.Count > 0 && SessionList.SelectedItem is null) SessionList.SelectedIndex = 0;
 
         if (_selectedId is not null)
         {
@@ -99,7 +100,80 @@ public partial class SessionsPage : UserControl
         MaxText.Text = stats.MaxFrameTimeMs.ToString("F2") + " ms";
 
         Chart.SetData(session.FrameTimes, stats.MedianFrameTimeMs, stats.MedianFrameTimeMs * SessionCalculator.StutterFactor);
+        FillSpikes(session);
         FillCompareOptions(session);
+    }
+
+    private void FillSpikes(PerformanceSession session)
+    {
+        SpikeList.Children.Clear();
+        var frames = session.FrameTimes;
+        double threshold = session.Stats.MedianFrameTimeMs * SessionCalculator.StutterFactor;
+        if (frames.Length == 0 || threshold <= 0)
+        {
+            SpikeList.Children.Add(new TextBlock
+            {
+                Text = Loc.Inst["sessions.noSpikes"],
+                Style = (Style)FindResource("Text.Muted"),
+            });
+            return;
+        }
+
+        var spikes = new List<(int Index, double Ms)>();
+        for (int i = 0; i < frames.Length; i++)
+        {
+            if (frames[i] > threshold) spikes.Add((i, frames[i]));
+        }
+
+        if (spikes.Count == 0)
+        {
+            SpikeList.Children.Add(new TextBlock
+            {
+                Text = Loc.Inst["sessions.noSpikes"],
+                Style = (Style)FindResource("Text.Muted"),
+            });
+            return;
+        }
+
+        var times = new double[frames.Length];
+        double elapsed = 0;
+        for (int i = 0; i < frames.Length; i++)
+        {
+            times[i] = elapsed;
+            elapsed += frames[i];
+        }
+
+        foreach (var (index, ms) in spikes.OrderByDescending(s => s.Ms).Take(5))
+        {
+            var row = new Grid { Margin = new Thickness(0, 2, 0, 2) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(110) });
+
+            var label = new TextBlock
+            {
+                Text = Loc.Inst.Format("sessions.frameAt", index + 1, TimeSpan.FromMilliseconds(times[index]).ToString(@"hh\:mm\:ss\.fff")),
+                Style = (Style)FindResource("Text.Muted"),
+            };
+            var msText = new TextBlock
+            {
+                Text = ms.ToString("F1") + " ms",
+                Style = (Style)FindResource("Text.Numeric"),
+                Foreground = (System.Windows.Media.Brush)FindResource("Brush.Danger"),
+            };
+            var ratio = new TextBlock
+            {
+                Text = "×" + (ms / session.Stats.MedianFrameTimeMs).ToString("F1"),
+                Style = (Style)FindResource("Text.Numeric"),
+                Foreground = (System.Windows.Media.Brush)FindResource("Brush.TextSecondary"),
+            };
+            Grid.SetColumn(msText, 1);
+            Grid.SetColumn(ratio, 2);
+            row.Children.Add(label);
+            row.Children.Add(msText);
+            row.Children.Add(ratio);
+            SpikeList.Children.Add(row);
+        }
     }
 
     private void FillCompareOptions(PerformanceSession current)
