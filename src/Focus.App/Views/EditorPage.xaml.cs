@@ -936,6 +936,47 @@ public partial class EditorPage : UserControl
         Properties.AddSection(Loc.Inst["editor.gameBinding"]);
         Properties.AddText(Loc.Inst["profiles.bindGame"], _profile.GameExecutable ?? string.Empty,
             v => _profile.GameExecutable = Services.ProfileStore.NormalizeGameName(v), "game.exe");
+
+        var browseRow = new Grid { Margin = new Thickness(0, 0, 0, 6) };
+        browseRow.ColumnDefinitions.Add(new ColumnDefinition());
+        browseRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(8) });
+        browseRow.ColumnDefinitions.Add(new ColumnDefinition());
+        var browse = new Button
+        {
+            Content = Loc.Inst["common.browse"],
+            Style = (Style)FindResource("Btn.Ghost"),
+            Height = 26,
+            FontSize = 11.5,
+        };
+        browse.Click += (_, _) =>
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Executable (*.exe)|*.exe|All files (*.*)|*.*",
+                Title = Loc.Inst["profiles.bindGame"],
+            };
+            if (dialog.ShowDialog() != true) return;
+            _profile.GameExecutable = Services.ProfileStore.NormalizeGameName(dialog.FileName);
+            BuildProperties();
+            OnPropertyChanged();
+        };
+        var clear = new Button
+        {
+            Content = Loc.Inst["common.none"],
+            Style = (Style)FindResource("Btn.Ghost"),
+            Height = 26,
+            FontSize = 11.5,
+        };
+        clear.Click += (_, _) =>
+        {
+            _profile.GameExecutable = null;
+            BuildProperties();
+            OnPropertyChanged();
+        };
+        Grid.SetColumn(clear, 2);
+        browseRow.Children.Add(browse);
+        browseRow.Children.Add(clear);
+        Properties.AddWide(browseRow);
         Properties.AddHint(Loc.Inst["profiles.bindHint"]);
     }
 

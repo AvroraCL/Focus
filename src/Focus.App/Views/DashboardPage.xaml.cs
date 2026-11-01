@@ -58,7 +58,8 @@ public partial class DashboardPage : UserControl
 
         bool hasTarget = snapshot.TargetPid > 0;
         TargetNameText.Text = hasTarget ? snapshot.TargetName : Loc.Inst["dashboard.noTarget"];
-        NoTargetButton.Visibility = hasTarget ? Visibility.Collapsed : Visibility.Visible;
+        NoTargetButton.Visibility = Visibility.Visible;
+        NoTargetButton.Content = Loc.Inst[hasTarget ? "dashboard.switchProcess" : "dashboard.selectProcess"];
 
         double? fps = snapshot.Get(MetricId.Fps);
         bool live = fps is > 0;
