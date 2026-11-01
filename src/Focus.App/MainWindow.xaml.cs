@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         _services = services;
         _initialPage = initialPage;
         InitializeComponent();
+        RestoreWindowPlacement();
 
         VersionText.Text = "Focus " + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0");
 
@@ -225,8 +226,49 @@ public partial class MainWindow : Window
 
     private void OnClose(object sender, RoutedEventArgs e) => Close();
 
+    private void RestoreWindowPlacement()
+    {
+        var settings = _services.Settings.Current;
+        Width = settings.WindowWidth;
+        Height = settings.WindowHeight;
+
+        if (settings.WindowLeft is double left && settings.WindowTop is double top)
+        {
+            double minLeft = SystemParameters.VirtualScreenLeft - 32;
+            double minTop = SystemParameters.VirtualScreenTop - 32;
+            double maxLeft = SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 200;
+            double maxTop = SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 120;
+            if (left >= minLeft && left <= maxLeft && top >= minTop && top <= maxTop)
+            {
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Left = left;
+                Top = top;
+            }
+        }
+
+        if (settings.WindowMaximized)
+        {
+            Loaded += (_, _) => WindowState = WindowState.Maximized;
+        }
+    }
+
+    private void SaveWindowPlacement()
+    {
+        var settings = _services.Settings.Current;
+        settings.WindowMaximized = WindowState == WindowState.Maximized;
+        if (WindowState == WindowState.Normal)
+        {
+            settings.WindowWidth = Width;
+            settings.WindowHeight = Height;
+            settings.WindowLeft = Left;
+            settings.WindowTop = Top;
+        }
+        _services.Settings.Save();
+    }
+
     private void OnClosing(object? sender, CancelEventArgs e)
     {
+        SaveWindowPlacement();
         if (_forceClose) return;
         if (_services.Settings.Current.CloseToTray)
         {

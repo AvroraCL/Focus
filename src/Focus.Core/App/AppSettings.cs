@@ -24,11 +24,20 @@ public sealed class AppSettings
 
     public bool OnboardingCompleted { get; set; }
 
+    // Window placement, remembered between launches.
+    public double WindowWidth { get; set; } = 1240;
+    public double WindowHeight { get; set; } = 800;
+    public double? WindowLeft { get; set; }
+    public double? WindowTop { get; set; }
+    public bool WindowMaximized { get; set; }
+
     public AppSettings Normalize()
     {
         SchemaVersion = CurrentSchema;
         if (Language is not ("system" or "zh-CN" or "en-US")) Language = "system";
         HardwarePollMs = Math.Clamp(HardwarePollMs, 200, 5000);
+        WindowWidth = double.IsNaN(WindowWidth) ? 1240 : Math.Clamp(WindowWidth, 1080, 8000);
+        WindowHeight = double.IsNaN(WindowHeight) ? 800 : Math.Clamp(WindowHeight, 680, 8000);
         UiRefreshHz = Math.Clamp(UiRefreshHz, 1, 30);
         GameBindings ??= new(StringComparer.OrdinalIgnoreCase);
         Hotkeys ??= new();

@@ -156,6 +156,8 @@ dotnet test tests/Focus.Tests/Focus.Tests.csproj
 
 还需要更多真实环境验证的内容（见 [PROGRESS.md](PROGRESS.md)）：真实游戏内的叠加行为、独占全屏、多显示器 / 高 DPI、长时间运行稳定性、安装包。
 
+版本之间的改动记录在 [CHANGELOG.md](CHANGELOG.md)。
+
 ## 第三方
 
 - [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)（MPL-2.0）—— 硬件传感器
