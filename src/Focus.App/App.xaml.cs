@@ -188,7 +188,7 @@ public partial class App : Application
         var window = new MainWindow(Services, initialPage);
         MainWindow = window;
         window.Show();
-        if (Services.Settings.Current.StartMinimized && Services.Settings.Current.OnboardingCompleted) window.Hide();
+        if (Services.Settings.Current.StartMinimized) window.Hide();
 
         if (hideWindow) window.Hide();
 

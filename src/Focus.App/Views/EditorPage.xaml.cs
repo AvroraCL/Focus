@@ -181,7 +181,22 @@ public partial class EditorPage : UserControl
     private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
     {
         var element = Canvas.HitTest(e.GetPosition(Canvas));
-        if (element is null) return;
+        if (element is null)
+        {
+            var addMenu = new ContextMenu { PlacementTarget = Canvas };
+            foreach (var kind in new[]
+                     {
+                         HudElementKind.Text, HudElementKind.Bar, HudElementKind.Graph,
+                         HudElementKind.MetricList, HudElementKind.Panel, HudElementKind.Divider, HudElementKind.Icon,
+                     })
+            {
+                var captured = kind;
+                addMenu.Items.Add(MenuItem(Loc.Inst[KindKey(captured)], () => CreateElement(captured)));
+            }
+            addMenu.IsOpen = true;
+            e.Handled = true;
+            return;
+        }
 
         if (!_selection.Contains(element.Id))
         {
