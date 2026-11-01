@@ -769,10 +769,14 @@ public partial class EditorPage : UserControl
         AfterEdit();
     }
 
+    private DateTime _lastNudge = DateTime.MinValue;
+
     private void Nudge(double dx, double dy)
     {
         if (_selection.Count == 0) return;
-        PushUndo();
+        // Holding an arrow key should be one undo step, not one per pixel.
+        if ((DateTime.UtcNow - _lastNudge).TotalMilliseconds > 700) PushUndo();
+        _lastNudge = DateTime.UtcNow;
         foreach (var id in _selection)
         {
             var element = _profile.FindElement(id);

@@ -31,6 +31,31 @@ public static class DataPaths
 
     public static string SessionPath(string id) => Path.Combine(SessionsDir, id + ".fss");
 
+    /// <summary>Deletes day logs older than <paramref name="days"/> days.</summary>
+    public static void CleanupOldLogs(int days = 7)
+    {
+        try
+        {
+            if (!Directory.Exists(LogsDir)) return;
+            var cutoff = DateTime.Now.AddDays(-days);
+            foreach (var file in Directory.EnumerateFiles(LogsDir, "focus-*.log"))
+            {
+                try
+                {
+                    if (File.GetLastWriteTime(file) < cutoff) File.Delete(file);
+                }
+                catch
+                {
+                    // A file in use is skipped.
+                }
+            }
+        }
+        catch
+        {
+            // Never fail startup because of log cleanup.
+        }
+    }
+
     public static void AppendLog(string message)
     {
         try

@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private SessionsPage? _sessions;
     private SettingsPage? _settings;
     private bool _forceClose;
+    private string _lastTrayText = string.Empty;
     private readonly string _initialPage;
 
     public MainWindow(AppServices services, string initialPage = "dashboard")
@@ -190,7 +191,12 @@ public partial class MainWindow : Window
         if (_tray is not null)
         {
             string fps = telemetry.Current.Get(MetricId.Fps) is { } value ? $"{value:F0} FPS · " : string.Empty;
-            _tray.Text = $"Focus — {fps}{telemetry.TargetName}".Trim(' ', '—', ' ');
+            string trayText = $"Focus — {fps}{telemetry.TargetName}".Trim(' ', '—', ' ');
+            if (trayText != _lastTrayText)
+            {
+                _lastTrayText = trayText;
+                _tray.Text = trayText;
+            }
         }
     }
 

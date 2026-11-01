@@ -42,6 +42,7 @@ public sealed class AppServices : IDisposable
     public void Initialize()
     {
         DataPaths.EnsureCreated();
+        DataPaths.CleanupOldLogs();
         Settings.Load();
         SettingsAccessor.Current = Settings;
         Loc.Inst.SetLanguage(Settings.Current.Language);

@@ -28,6 +28,8 @@ public sealed class OverlayWindow : Window
     private bool _visible;
     private string _lastPlacement = string.Empty;
     private bool _lastFocused = true;
+    private long _lastRenderedSequence = -1;
+    private bool _profileDirty = true;
 
     public OverlayWindow()
     {
@@ -118,6 +120,7 @@ public sealed class OverlayWindow : Window
                         try
                         {
                             _profile = OverlayStateCodec.ParseProfile(state);
+                            _profileDirty = true;
                             OverlayLog.Write("profile parsed: " + (_profile?.Name ?? "<null>"));
                         }
                         catch (Exception ex)
@@ -157,8 +160,12 @@ public sealed class OverlayWindow : Window
         _surface.Profile = _profile;
         _surface.Data = _dataSource;
 
-        if (shouldShow && _visible)
+        // Values are published at 20 Hz while the timer runs at 30 Hz; skip duplicate frames.
+        long sequence = _state?.Sequence ?? -1;
+        if (shouldShow && _visible && (sequence != _lastRenderedSequence || _profileDirty))
         {
+            _lastRenderedSequence = sequence;
+            _profileDirty = false;
             _surface.InvalidateVisual();
         }
     }
