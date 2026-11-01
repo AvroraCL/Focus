@@ -137,7 +137,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 powershell -ExecutionPolicy Bypass -File build.ps1 -SelfContained
 ```
 
-产物位于 `artifacts/publish/app`，压缩包为 `artifacts/publish/Focus-v0.0.1-win-x64.zip`。
+产物位于 `artifacts/publish/app`，压缩包为 `artifacts/publish/Focus-v0.0.2-win-x64.zip`。
 
 运行单元测试：
 
@@ -145,7 +145,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1 -SelfContained
 dotnet test tests/Focus.Tests/Focus.Tests.csproj
 ```
 
-## 当前版本：v0.0.1
+## 当前版本：v0.0.2
 
 这是第一个可以实际使用的版本，已经做到：
 

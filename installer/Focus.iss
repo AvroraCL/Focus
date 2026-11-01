@@ -3,7 +3,7 @@
 ; Then compile:        iscc installer\Focus.iss
 
 #define MyAppName "Focus"
-#define MyAppVersion "0.0.1"
+#define MyAppVersion "0.0.2"
 #define MyAppPublisher "Focus"
 #define MyAppExeName "Focus.exe"
 
