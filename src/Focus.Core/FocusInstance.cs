@@ -22,4 +22,6 @@ public static class FocusInstance
     public static string AppMutexName => "Focus.App.SingleInstance." + Suffix;
 
     public static string OverlayMutexName => "Focus.Overlay.SingleInstance." + Suffix;
+
+    public static string ActivateEventName => "Focus.App.Activate." + Suffix;
 }

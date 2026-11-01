@@ -280,6 +280,7 @@ public static class Strings
         ["settings.languageRestartHint"] = "语言切换立即生效。",
         ["settings.startup"] = "启动",
         ["settings.closeToTray"] = "关闭窗口时最小化到托盘",
+        ["settings.startMinimized"] = "启动时直接最小化到托盘",
 
         ["preset.preset-minimal"] = "极简",
         ["preset.preset-classic"] = "经典",
@@ -653,6 +654,7 @@ public static class Strings
         ["settings.languageRestartHint"] = "Language changes apply immediately.",
         ["settings.startup"] = "Startup",
         ["settings.closeToTray"] = "Minimize to tray when closing",
+        ["settings.startMinimized"] = "Start minimized to the tray",
 
         ["preset.preset-minimal"] = "Minimal",
         ["preset.preset-classic"] = "Classic",

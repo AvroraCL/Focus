@@ -327,6 +327,12 @@ public partial class MainWindow : Window
         _tray.ContextMenuStrip = menu;
     }
 
+    public void ActivateFromExternal()
+    {
+        DataPaths.AppendLog("second launch: window activated");
+        RestoreFromTray();
+    }
+
     private void RestoreFromTray()
     {
         Show();

@@ -38,6 +38,9 @@
                     </Grid>
                     <CheckBox x:Name="CloseToTrayCheck" Content="{Binding [settings.closeToTray], Source={x:Static loc:Loc.Inst}}"
                               Checked="OnCloseToTrayChanged" Unchecked="OnCloseToTrayChanged" />
+                    <CheckBox x:Name="StartMinimizedCheck" Margin="0,10,0,0"
+                              Content="{Binding [settings.startMinimized], Source={x:Static loc:Loc.Inst}}"
+                              Checked="OnStartMinimizedChanged" Unchecked="OnStartMinimizedChanged" />
                 </StackPanel>
             </Border>
 

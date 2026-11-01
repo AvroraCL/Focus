@@ -10,6 +10,7 @@ namespace Focus.App;
 public partial class App : Application
 {
     private Mutex? _instanceMutex;
+    private EventWaitHandle? _activateEvent;
     private bool _initialized;
 
     public AppServices Services { get; } = new();
@@ -35,9 +36,34 @@ public partial class App : Application
         _instanceMutex = new Mutex(true, Focus.Core.FocusInstance.AppMutexName, out bool created);
         if (!created)
         {
+            // Ask the running instance to come to the foreground.
+            try
+            {
+                using var activate = EventWaitHandle.OpenExisting(Focus.Core.FocusInstance.ActivateEventName);
+                activate.Set();
+            }
+            catch
+            {
+                // The other instance is still starting; nothing to activate.
+            }
             Shutdown();
             return;
         }
+
+        _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, Focus.Core.FocusInstance.ActivateEventName);
+        var activateListener = new Thread(() =>
+        {
+            while (true)
+            {
+                _activateEvent.WaitOne();
+                Dispatcher.BeginInvoke(new Action(() => (MainWindow as global::Focus.App.MainWindow)?.ActivateFromExternal()));
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "Focus-ActivateListener",
+        };
+        activateListener.Start();
 
         DispatcherUnhandledException += OnDispatcherUnhandled;
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -162,6 +188,7 @@ public partial class App : Application
         var window = new MainWindow(Services, initialPage);
         MainWindow = window;
         window.Show();
+        if (Services.Settings.Current.StartMinimized && Services.Settings.Current.OnboardingCompleted) window.Hide();
 
         if (hideWindow) window.Hide();
 
@@ -225,6 +252,7 @@ public partial class App : Application
     {
         if (_initialized) Services.Shutdown();
         _instanceMutex?.Dispose();
+        _activateEvent?.Dispose();
         base.OnExit(e);
     }
 }

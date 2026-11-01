@@ -75,6 +75,7 @@ public partial class SettingsPage : UserControl
         UiRefreshCombo.SelectedIndex = Array.IndexOf(new[] { 5, 8, 10, 15, 20, 30 }, _services.Settings.Current.UiRefreshHz) is var refreshIndex && refreshIndex >= 0 ? refreshIndex : 2;
 
         CloseToTrayCheck.IsChecked = _services.Settings.Current.CloseToTray;
+        StartMinimizedCheck.IsChecked = _services.Settings.Current.StartMinimized;
         OnlyWhenFocusedCheck.IsChecked = _services.Settings.Current.OnlyWhenFocused;
         AutoRecordCheck.IsChecked = _services.Settings.Current.RecordAutomatically;
 
@@ -147,6 +148,14 @@ public partial class SettingsPage : UserControl
     {
         if (_loading) return;
         _services.Settings.Current.CloseToTray = CloseToTrayCheck.IsChecked == true;
+        SaveSettings();
+    }
+
+    private void OnStartMinimizedChanged(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _services.Settings.Current.StartMinimized = StartMinimizedCheck.IsChecked == true;
+        _services.Settings.Current.OnboardingCompleted = true;
         SaveSettings();
     }
 
