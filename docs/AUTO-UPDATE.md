@@ -13,7 +13,7 @@
 - ZIP：`Focus-vMAJOR.MINOR.PATCH-win-x64.zip`，根目录直接包含 `Focus.exe`、`Focus.dll`、运行时配置、`focus_native.dll`、`overlay/` 和 `updater/`。
 - 校验：优先使用 GitHub asset 的 `sha256:` digest；否则使用同名 `.zip.sha256` 文件。没有有效 SHA-256 的新版本不能安装。
 - `pwsh -File build.ps1` 发布 app、overlay 和 updater，输出 ZIP 与 SHA-256 文件。版本来自 `Directory.Build.props`，Inno Setup 从产物读取版本。发布时把 ZIP 和校验文件一起上传，标签版本必须一致。
-- v0.0.3 是本次本地开发版本，尚未创建 GitHub Release。v0.0.2 没有此更新客户端，首次升级需手动解压新版。
+- v0.0.3 开始随发布包附带更新客户端。v0.0.2 没有此更新客户端，首次升级需手动解压新版。
 
 GitHub 接口依据：[Releases REST API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)。
 
@@ -35,4 +35,4 @@ GitHub 接口依据：[Releases REST API](https://docs.github.com/en/rest/releas
 
 单元测试覆盖版本/来源过滤、HTTP 错误、校验文件回退、取消、截断/超限/哈希错误、危险 ZIP、完整替换和故障回滚。端到端工具在隔离目录运行真实更新程序与测试用主进程，验证准备握手、退出等待、备份、数据保留、替换和重启，不更改用户安装。
 
-GitHub 连接器已确认当前远端为 v0.0.2，已有 ZIP 命名与 SHA-256 digest 符合协议。本机 PowerShell 直连 GitHub 出现 TLS 身份验证错误，NuGet 漏洞审计源也不可达；因此网络流测试使用受控 HTTP 响应，未宣称从公网下载和安装新版成功。没有禁用 TLS 校验。
+开发阶段曾核对 v0.0.2 的 ZIP 命名与 SHA-256 digest，符合协议。本机 PowerShell 直连 GitHub 曾出现 TLS 身份验证错误，NuGet 漏洞审计源也不可达；因此网络流测试使用受控 HTTP 响应，未宣称客户端从公网下载和安装新版成功。没有禁用 TLS 校验。

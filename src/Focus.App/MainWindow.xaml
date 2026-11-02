@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:loc="clr-namespace:Focus.App.Localization"
-        Title="Focus" Width="1400" Height="900" MinWidth="1080" MinHeight="680" WindowStartupLocation="CenterScreen"
+        Title="Focus" Icon="Assets/focus-app-icon-v1.ico" Width="1400" Height="900" MinWidth="1080" MinHeight="680" WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource Font.Base}" FontSize="13"
         WindowStyle="None" Background="{StaticResource Brush.Window}" SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">

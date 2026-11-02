@@ -42,4 +42,4 @@ $env:FOCUS_DATA_ROOT = Join-Path $PWD "artifacts/ui-preview/data"
 - 设置页分类导航，以及更完整的首次使用流程。
 - 对实际鼠标拖动、多显示器 DPI 和屏幕阅读器进行人工验证。
 
-本次已生成 v0.0.3 ZIP 与校验文件，尚未发布。自动更新的协议、验证与已知边界见 [AUTO-UPDATE.md](AUTO-UPDATE.md)。上述后续交互拓展不在本次范围内。
+本次改动随 v0.0.3 ZIP 与校验文件发布。自动更新的协议、验证与已知边界见 [AUTO-UPDATE.md](AUTO-UPDATE.md)。上述后续交互拓展不在本次范围内。

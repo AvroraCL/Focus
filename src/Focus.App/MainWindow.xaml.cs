@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -468,32 +467,11 @@ public partial class MainWindow : Window
 
     private static Drawing.Icon CreateTrayIcon()
     {
-        using var bitmap = new Drawing.Bitmap(32, 32);
-        using (var graphics = Drawing.Graphics.FromImage(bitmap))
-        {
-            graphics.SmoothingMode = Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            graphics.Clear(Drawing.Color.Transparent);
-            using var brush = new Drawing.SolidBrush(Drawing.Color.FromArgb(0x4C, 0x9A, 0xFF));
-            graphics.FillEllipse(brush, 1, 1, 30, 30);
-            using var font = new Drawing.Font("Segoe UI", 17, Drawing.FontStyle.Bold, Drawing.GraphicsUnit.Pixel);
-            var size = graphics.MeasureString("F", font);
-            graphics.DrawString("F", font, Drawing.Brushes.White, (32 - size.Width) / 2, (32 - size.Height) / 2);
-        }
-
-        nint handle = bitmap.GetHicon();
-        try
-        {
-            using var temp = Drawing.Icon.FromHandle(handle);
-            return (Drawing.Icon)temp.Clone();
-        }
-        finally
-        {
-            DestroyIcon(handle);
-        }
+        using var stream = Application.GetResourceStream(
+            new Uri("pack://application:,,,/Assets/focus-app-icon-v1.ico"))!.Stream;
+        using var icon = new Drawing.Icon(stream, 32, 32);
+        return (Drawing.Icon)icon.Clone();
     }
-
-    [DllImport("user32.dll")]
-    private static extern bool DestroyIcon(nint handle);
 
     // ------------------------------------------------------------- toast / language
 

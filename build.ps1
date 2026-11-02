@@ -30,7 +30,9 @@ $expectedPublish = [System.IO.Path]::GetFullPath((Join-Path $root 'artifacts/pub
 if ($resolvedPublish -ne $expectedPublish -or -not $resolvedPublish.StartsWith([System.IO.Path]::GetFullPath($root) + [System.IO.Path]::DirectorySeparatorChar)) {
     throw 'Unsafe publish output path'
 }
-Remove-Item -LiteralPath $resolvedPublish -Recurse -Force -ErrorAction SilentlyContinue
+if (Test-Path -LiteralPath $resolvedPublish) {
+    Remove-Item -LiteralPath $resolvedPublish -Recurse -Force
+}
 
 $common = @(
     "-c", "Release",

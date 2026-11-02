@@ -6,6 +6,7 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\focus-app-icon-v1.ico</ApplicationIcon>
     <AssemblyName>Focus</AssemblyName>
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
   </PropertyGroup>
@@ -14,6 +15,7 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\focus-app-icon-v1.ico" />
     <Content Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

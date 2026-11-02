@@ -20,7 +20,7 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 
 **[下载已发布的 Windows 版](https://github.com/AvroraCL/Focus/releases/latest)** · [查看 HUD 预设](#hud-预设) · [更新日志](CHANGELOG.md) · [反馈问题](https://github.com/AvroraCL/Focus/issues)
 
-> 本 README 展示 **v0.0.3 开发版**。当前 GitHub 已发布版本为 **v0.0.2**，尚不包含新版瑞士风格界面、Rust 核心、新增 HUD 和自动更新客户端；体验这些功能需要从当前源码构建。
+> **v0.0.3** 带来瑞士风格界面、Rust 核心、6 套新增 HUD 和自动更新客户端。从 v0.0.2 首次升级请手动下载并解压新版。
 
 ![Focus 瑞士风格概览页：尚未选择游戏，硬件指标正常显示](docs/images/focus-dashboard.png)
 
@@ -38,20 +38,15 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 - **独立覆盖层**：透明、鼠标穿透、不抢焦点，支持锚点、偏移和缩放；编辑器与覆盖层共用 HUD 渲染器。
 - **测试会话**：开始 / 停止录制，保存原始帧间隔，查看统计与卡顿尖峰、对比历史会话、导出 CSV。
 - **桌面交互**：系统托盘、全局快捷键、中英文界面、`Ctrl+K` 快捷操作、配置和会话搜索、专注画布模式。
-- **更新检查**：开发版支持启动时检查 GitHub 正式版，可取消下载、SHA-256 校验，以及退出后的文件替换与失败回滚。安装由用户点击执行。
+- **更新检查**：支持启动时检查 GitHub 正式版，可取消下载、SHA-256 校验，以及退出后的文件替换与失败回滚。安装由用户点击执行。
 
 ### 下载与版本
 
 | 版本 | 获取方式 | 说明 |
 | --- | --- | --- |
-| v0.0.2 · 已发布 | [Focus-v0.0.2-win-x64.zip](https://github.com/AvroraCL/Focus/releases/download/v0.0.2/Focus-v0.0.2-win-x64.zip) | 历史界面与功能；解压后运行，需要 .NET 10 Desktop Runtime |
-| v0.0.3 · 开发中 | [从源码构建](#从源码构建) | 本 README 展示的界面与功能；尚未发布安装包或新版 Release |
+| v0.0.3 | [Focus-v0.0.3-win-x64.zip](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-v0.0.3-win-x64.zip) | 解压后运行 Focus.exe，需要 .NET 10 Desktop Runtime |
 
-v0.0.2 ZIP 的 SHA-256：
-
-```text
-e6b265fdb87465015b193e911c7f4f019dc3a0b8ae640156fa5e0083e7c93e5b
-```
+校验文件：[Focus-v0.0.3-win-x64.zip.sha256](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-v0.0.3-win-x64.zip.sha256)。可使用 PowerShell `Get-FileHash -Algorithm SHA256` 核对下载文件。
 
 完整版本记录见 [Releases](https://github.com/AvroraCL/Focus/releases) 和 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -72,7 +67,7 @@ e6b265fdb87465015b193e911c7f4f019dc3a0b8ae640156fa5e0083e7c93e5b
 4. 打开“配置文件”，选择内置预设；也可以进入“HUD 编辑器”调整组件和位置。
 5. 显示 HUD。需要复盘时开始记录，结束后在“会话记录”中查看统计、曲线和导出结果。
 
-开发版的“使用预设”直接应用布局；“编辑”会创建可修改副本。关闭窗口默认收回托盘，完全退出请使用托盘菜单。
+“使用预设”直接应用布局；“编辑”会创建可修改副本。关闭窗口默认收回托盘，完全退出请使用托盘菜单。
 
 ### HUD 预设
 
@@ -128,7 +123,7 @@ e6b265fdb87465015b193e911c7f4f019dc3a0b8ae640156fa5e0083e7c93e5b
 
 设置页可打开数据目录或复制诊断信息。配置与会话在本地保存，原子文件替换降低写入中断造成的损坏风险。
 
-开发版默认在启动后检查更新，也可以关闭自动检查。下载成功并校验后，点击“重启并安装”；录制期间不能安装，安装前会保存待保存的编辑内容。更新来源、文件格式和回滚边界见 [自动更新说明](docs/AUTO-UPDATE.md)。
+默认在启动后检查更新，也可以关闭自动检查。下载成功并校验后，点击“重启并安装”；录制期间不能安装，安装前会保存待保存的编辑内容。更新来源、文件格式和回滚边界见 [自动更新说明](docs/AUTO-UPDATE.md)。
 
 ### 当前状态与已知限制
 
@@ -136,7 +131,7 @@ e6b265fdb87465015b193e911c7f4f019dc3a0b8ae640156fa5e0083e7c93e5b
 - 普通置顶窗口不能叠加到独占全屏画面；推荐无边框窗口化。具体游戏与反作弊软件的兼容性需逐项验证。
 - 指标缺失时显示 `—`；CPU 温度、功耗或某些 GPU 传感器可能因硬件、权限或驱动而不可用。
 - 实时低帧统计基于最近最多 60,000 个 Present；录制统计基于已保存会话。单次会话当前最多记录 8,000,000 个帧间隔。
-- 本次开发版已通过 62 项 .NET 测试、WPF 交互检查、预设渲染检查和本地更新流程验证；公网升级、正式安装包、长时间运行、Windows 11、多显示器 / 高 DPI 与更多真实游戏环境仍待验证。
+- 已通过 62 项 .NET 测试、WPF 交互检查、预设渲染检查和本地更新流程验证；客户端公网升级、安装向导、长时间运行、Windows 11、多显示器 / 高 DPI 与更多真实游戏环境仍待验证。
 
 具体边界见 [兼容性说明](docs/COMPATIBILITY.md)、[Rust 迁移说明](docs/RUST-MIGRATION.md) 和 [开发进度](PROGRESS.md)。
 
