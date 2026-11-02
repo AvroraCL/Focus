@@ -1,180 +1,67 @@
+using Focus.Core.Native;
+
 namespace Focus.Core.Metrics;
 
-/// <summary>
-/// Rolling timeline of frame present timestamps. All times are milliseconds from an arbitrary
-/// monotonic origin (the capture clock).
-/// </summary>
-public sealed class FrameTimeline
+/// <summary>Thread-safe Rust timeline. SafeHandle owns its lifetime across native calls.</summary>
+public sealed class FrameTimeline : IDisposable
 {
-    private readonly double[] _times;
-    private int _start;
-    private int _count;
-    private long _totalFrames;
-
-    public FrameTimeline(int capacity = 120_000)
+    private readonly TimelineHandle _handle;
+    private readonly object _gate = new();
+    public FrameTimeline(int capacity = 120_000) => _handle = new TimelineHandle(Math.Clamp(capacity, 16, 2_000_000));
+    private double[] Summary()
     {
-        if (capacity < 16) capacity = 16;
-        _times = new double[capacity];
-    }
-
-    public long TotalFrames => _totalFrames;
-    public int Count => _count;
-    public int Capacity => _times.Length;
-
-    public bool IsEmpty => _count == 0;
-
-    public double FirstMs => _count == 0 ? 0 : At(0);
-    public double LastMs => _count == 0 ? 0 : At(_count - 1);
-
-    public double ElapsedMs => _count < 2 ? 0 : LastMs - FirstMs;
-
-    public void Clear()
-    {
-        _start = 0;
-        _count = 0;
-        _totalFrames = 0;
-    }
-
-    public void Add(double timeMs)
-    {
-        if (_count > 0)
-        {
-            double last = At(_count - 1);
-            if (timeMs <= last) return; // drop duplicated / out-of-order presents
-        }
-
-        int index = (_start + _count) % _times.Length;
-        if (_count == _times.Length)
-        {
-            _times[_start] = timeMs;
-            _start = (_start + 1) % _times.Length;
-        }
-        else
-        {
-            _times[index] = timeMs;
-            _count++;
-        }
-
-        _totalFrames++;
-    }
-
-    private double At(int i) => _times[(_start + i) % _times.Length];
-
-    /// <summary>FPS measured over the trailing window that ends at <paramref name="nowMs"/>.</summary>
-    public double FpsOver(double nowMs, double windowMs = 1000.0)
-    {
-        if (_count < 2) return 0;
-        double from = nowMs - windowMs;
-        int frames = 0;
-        double oldest = 0;
-        for (int i = _count - 1; i >= 0; i--)
-        {
-            double t = At(i);
-            if (t < from) break;
-            frames++;
-            oldest = t;
-        }
-        if (frames < 2) return 0;
-        double span = LastMs - oldest;
-        return span > 0 ? (frames - 1) * 1000.0 / span : 0;
-    }
-
-    public int CountFramesInWindow(double nowMs, double windowMs)
-    {
-        double from = nowMs - windowMs;
-        int n = 0;
-        for (int i = _count - 1; i >= 0; i--)
-        {
-            if (At(i) < from) break;
-            n++;
-        }
-        return n;
-    }
-
-    /// <summary>Copies the inter-frame deltas (ms) into <paramref name="dest"/>, oldest first.</summary>
-    public int CopyDeltas(Span<double> dest)
-    {
-        int n = Math.Min(dest.Length, Math.Max(0, _count - 1));
-        int offset = _count - n;
-        for (int i = 0; i < n; i++)
-        {
-            double a = At(offset + i);
-            double b = At(offset + i + 1);
-            dest[i] = b - a;
-        }
-        return n;
-    }
-
-    public double[] ToDeltas()
-    {
-        var result = new double[Math.Max(0, _count - 1)];
-        CopyDeltas(result);
+        var result = new double[5];
+        NativeCore.Check(NativeCore.Timeline(_handle, 2, 0, 0, result, 5));
         return result;
     }
-
-    public FrameStats ComputeStats(double nowMs, double instantWindowMs = 1000.0)
+    public long TotalFrames => (long)Summary()[1];
+    public int Count => (int)Summary()[0];
+    public int Capacity => (int)Summary()[4];
+    public bool IsEmpty => Count == 0;
+    public double FirstMs => Summary()[2];
+    public double LastMs => Summary()[3];
+    public double ElapsedMs { get { var s = Summary(); return s[3] - s[2]; } }
+    public void Add(double timeMs) { lock (_gate) NativeCore.Check(NativeCore.Timeline(_handle, 0, timeMs, 0, null, 0)); }
+    public void Clear() { lock (_gate) NativeCore.Check(NativeCore.Timeline(_handle, 1, 0, 0, null, 0)); }
+    public int CopyDeltas(Span<double> dest)
     {
-        if (_count < 2)
-        {
-            return new FrameStats
-            {
-                FrameCount = _totalFrames,
-                CurrentFps = 0,
-                AverageFps = 0,
-                OnePercentLow = 0,
-                PointOnePercentLow = 0,
-                ElapsedSeconds = 0,
-            };
-        }
-
-        var deltas = ToDeltas();
-        var sorted = (double[])deltas.Clone();
-        Array.Sort(sorted); // ascending
-
-        double elapsed = (LastMs - FirstMs) / 1000.0;
-        double avgFps = elapsed > 0 ? (_count - 1) / elapsed : 0;
-
+        var buffer = new double[dest.Length];
+        int count = NativeCore.Timeline(_handle, 3, 0, 0, buffer, (uint)buffer.Length);
+        NativeCore.Check(count); buffer.AsSpan(0, count).CopyTo(dest); return count;
+    }
+    public double[] ToDeltas()
+    {
+        lock (_gate) { var result = new double[Math.Max(0, Count - 1)]; CopyDeltas(result); return result; }
+    }
+    public double FpsOver(double nowMs, double windowMs = 1000) => ComputeStats(nowMs, windowMs).CurrentFps;
+    public int CountFramesInWindow(double nowMs, double windowMs)
+    {
+        int count = NativeCore.Timeline(_handle, 4, nowMs, windowMs, null, 0); NativeCore.Check(count); return count;
+    }
+    public FrameStats ComputeStats(double nowMs, double instantWindowMs = 1000)
+    {
+        NativeCore.Check(NativeCore.TimelineStats(_handle, nowMs, instantWindowMs, out var s));
         return new FrameStats
         {
-            FrameCount = _totalFrames,
-            CurrentFps = FpsOver(nowMs, instantWindowMs),
-            AverageFps = avgFps,
-            OnePercentLow = LowFps(sorted, 0.01),
-            PointOnePercentLow = LowFps(sorted, 0.001),
-            MedianFrameTimeMs = Percentile(sorted, 0.50),
-            P95FrameTimeMs = Percentile(sorted, 0.95),
-            P99FrameTimeMs = Percentile(sorted, 0.99),
-            MaxFrameTimeMs = sorted.Length > 0 ? sorted[^1] : 0,
-            ElapsedSeconds = elapsed,
+            FrameCount = (long)s.Count,
+            ElapsedSeconds = s.Seconds,
+            CurrentFps = s.CurrentFps,
+            AverageFps = s.AverageFps,
+            OnePercentLow = s.LowOne,
+            PointOnePercentLow = s.LowPointOne,
+            MedianFrameTimeMs = s.Median,
+            P95FrameTimeMs = s.P95,
+            P99FrameTimeMs = s.P99,
+            MaxFrameTimeMs = s.Maximum
         };
     }
-
-    /// <summary>
-    /// Low FPS as conventionally reported by RTSS/CapFrameX: the average frame rate of the
-    /// slowest <paramref name="fraction"/> of frames.
-    /// </summary>
-    public static double LowFps(IReadOnlyList<double> sortedAscendingDeltas, double fraction)
+    public static double LowFps(IReadOnlyList<double> sortedAscendingDeltas, double fraction) => Quantile(sortedAscendingDeltas, fraction, 1);
+    public static double Percentile(IReadOnlyList<double> sortedAscending, double p) => Quantile(sortedAscending, p, 0);
+    private static double Quantile(IReadOnlyList<double> values, double fraction, uint mode)
     {
-        int n = sortedAscendingDeltas.Count;
-        if (n == 0) return 0;
-        int take = Math.Max(1, (int)Math.Ceiling(n * fraction));
-        double sum = 0;
-        for (int i = n - take; i < n; i++) sum += sortedAscendingDeltas[i];
-        double mean = sum / take;
-        return mean > 0 ? 1000.0 / mean : 0;
+        var input = values.ToArray(); NativeCore.Check(NativeCore.Quantile(input, (uint)input.Length, fraction, mode, out var value)); return value;
     }
-
-    public static double Percentile(IReadOnlyList<double> sortedAscending, double p)
-    {
-        int n = sortedAscending.Count;
-        if (n == 0) return 0;
-        double pos = p * (n - 1);
-        int lo = (int)Math.Floor(pos);
-        int hi = (int)Math.Ceiling(pos);
-        if (lo == hi) return sortedAscending[lo];
-        double t = pos - lo;
-        return sortedAscending[lo] * (1 - t) + sortedAscending[hi] * t;
-    }
+    public void Dispose() => _handle.Dispose();
 }
 
 public sealed class FrameStats

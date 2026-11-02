@@ -8,6 +8,37 @@ namespace Focus.Tests;
 public class OverlayIpcTests
 {
     [Fact]
+    public async Task ConcurrentPublicationNeverMixesPayloads()
+    {
+        using var writer = SharedStateChannel.CreateWriter();
+        using var reader = SharedStateChannel.OpenReader();
+        var publishing = Task.Run(() =>
+        {
+            for (int i = 1; i <= 250; i++)
+                writer.Write(Enumerable.Repeat((byte)i, i * 251).ToArray());
+        });
+        int reads = 0;
+        while (!publishing.IsCompleted)
+        {
+            if (reader.TryReadNewest(out var payload))
+            {
+                Assert.All(payload, b => Assert.Equal(payload[0], b));
+                Assert.Equal(payload[0] * 251, payload.Length);
+                reads++;
+            }
+            await Task.Delay(1);
+        }
+        await publishing;
+        if (reader.TryReadNewest(out var last))
+        {
+            Assert.Equal(250 * 251, last.Length);
+            Assert.All(last, b => Assert.Equal((byte)250, b));
+            reads++;
+        }
+        Assert.True(reads > 0);
+    }
+
+    [Fact]
     public void SharedChannel_RoundTripsPayload()
     {
         using var writer = SharedStateChannel.CreateWriter();

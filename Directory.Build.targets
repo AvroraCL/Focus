@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <FocusNativeRoot>$(MSBuildThisFileDirectory)</FocusNativeRoot>
+    <FocusNativeDll>$(FocusNativeRoot)artifacts\native\focus_native.dll</FocusNativeDll>
+  </PropertyGroup>
+  <Target Name="BuildFocusRustCore" BeforeTargets="BeforeBuild" Condition="'$(MSBuildProjectName)' == 'Focus.Core' and '$(DesignTimeBuild)' != 'true'">
+    <Exec Command="pwsh -NoProfile -File &quot;$(FocusNativeRoot)build-native.ps1&quot;" WorkingDirectory="$(FocusNativeRoot)" />
+  </Target>
+  <ItemGroup>
+    <Content Include="$(FocusNativeDll)" Link="focus_native.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -15,17 +15,26 @@ public sealed class SettingsService
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
     };
 
+    private readonly string _path;
+    private readonly string _backup;
+    public SettingsService(string? settingsPath = null)
+    {
+        _path = settingsPath ?? DataPaths.SettingsFile;
+        _backup = settingsPath is null ? DataPaths.SettingsBackup : settingsPath + ".backup";
+    }
+
     public AppSettings Current { get; private set; } = new();
 
     public void Load()
     {
         try
         {
-            if (File.Exists(DataPaths.SettingsFile))
+            if (File.Exists(_path))
             {
-                var json = File.ReadAllText(DataPaths.SettingsFile);
+                var json = File.ReadAllText(_path);
                 Current = JsonSerializer.Deserialize<AppSettings>(json, Options) ?? new AppSettings();
             }
+            else TryRecoverBackup();
         }
         catch (Exception ex)
         {
@@ -39,8 +48,8 @@ public sealed class SettingsService
     {
         try
         {
-            if (!File.Exists(DataPaths.SettingsBackup)) return;
-            var json = File.ReadAllText(DataPaths.SettingsBackup);
+            if (!File.Exists(_backup)) return;
+            var json = File.ReadAllText(_backup);
             Current = JsonSerializer.Deserialize<AppSettings>(json, Options) ?? new AppSettings();
             DataPaths.AppendLog("settings restored from backup");
         }
@@ -51,54 +60,39 @@ public sealed class SettingsService
         }
     }
 
-    public void Save()
+    private readonly object _saveGate = new();
+    public string? LastSaveError { get; private set; }
+    public event Action<string>? SaveFailed;
+    public bool Save()
     {
-        try
+        lock (_saveGate)
         {
-            DataPaths.EnsureCreated();
-            var json = JsonSerializer.Serialize(Current, Options);
-            var path = DataPaths.SettingsFile;
-
-            if (File.Exists(path))
+            try
             {
-                try
+                Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(_path))!);
+                var json = JsonSerializer.Serialize(Current, Options);
+                if (File.Exists(_path))
                 {
-                    File.Copy(path, DataPaths.SettingsBackup, overwrite: true);
+                    // Never overwrite a recoverable backup with malformed JSON.
+                    var previous = File.ReadAllText(_path);
+                    try
+                    {
+                        using var valid = JsonDocument.Parse(previous);
+                        Focus.Core.Native.AtomicFile.WriteAllText(_backup, previous);
+                    }
+                    catch (JsonException) { }
                 }
-                catch (Exception ex)
-                {
-                    DataPaths.AppendLog("settings backup failed: " + ex.Message);
-                }
+                Focus.Core.Native.AtomicFile.WriteAllText(_path, json);
+                LastSaveError = null;
+                return true;
             }
-
-            var temp = path + ".tmp";
-            File.WriteAllText(temp, json);
-
-            // Antivirus / indexing services sometimes hold the file for a few milliseconds.
-            for (int attempt = 0; attempt < 4; attempt++)
+            catch (Exception ex)
             {
-                try
-                {
-                    File.Move(temp, path, overwrite: true);
-                    return;
-                }
-                catch (IOException) when (attempt < 3)
-                {
-                    Thread.Sleep(40);
-                }
-                catch (UnauthorizedAccessException) when (attempt < 3)
-                {
-                    Thread.Sleep(40);
-                }
+                LastSaveError = ex.Message;
+                DataPaths.AppendLog("settings save failed: " + ex.Message);
+                SaveFailed?.Invoke(ex.Message);
+                return false;
             }
-
-            // Last resort: write in place so the user's settings are never silently lost.
-            File.WriteAllText(path, json);
-            try { File.Delete(temp); } catch { /* ignore */ }
-        }
-        catch (Exception ex)
-        {
-            DataPaths.AppendLog("settings save failed: " + ex.Message);
         }
     }
 }

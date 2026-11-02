@@ -33,11 +33,7 @@ public static class ProfileCodec
         var dir = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
-        // Atomic-ish write so a crash cannot truncate an existing profile.
-        var temp = path + ".tmp";
-        File.WriteAllText(temp, json);
-        if (File.Exists(path)) File.Replace(temp, path, null);
-        else File.Move(temp, path);
+        Focus.Core.Native.AtomicFile.WriteAllText(path, json);
     }
 
     public static string Export(HudProfile profile) => Serialize(profile);

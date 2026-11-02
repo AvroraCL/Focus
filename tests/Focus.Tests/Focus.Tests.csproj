@@ -5,11 +5,16 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../src/Focus.App/Services/SettingsService.cs" Link="App/SettingsService.cs" />
+    <Compile Include="../../src/Focus.App/Services/DataPaths.cs" Link="App/DataPaths.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Focus.Telemetry\Focus.Telemetry.csproj" />
     <ProjectReference Include="..\..\src\Focus.Core\Focus.Core.csproj" />
     <ProjectReference Include="..\..\src\Focus.Hud\Focus.Hud.csproj" />
   </ItemGroup>

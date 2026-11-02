@@ -21,6 +21,8 @@ public partial class App : Application
         // that otherwise burns CPU on systems with a tablet driver installed.
         AppContext.SetSwitch("Switch.System.Windows.Input.Stylus.DisableStylusAndTouchSupport", true);
         base.OnStartup(e);
+        Services.Settings.SaveFailed += message => Dispatcher.BeginInvoke(new Action(() =>
+            MessageBox.Show(message, "Focus — " + "保存失败 / Save failed", MessageBoxButton.OK, MessageBoxImage.Error)));
 
         for (int i = 0; i < e.Args.Length - 1; i++)
         {

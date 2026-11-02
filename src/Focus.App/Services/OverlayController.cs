@@ -53,9 +53,9 @@ public sealed class OverlayController : IDisposable
     {
         get
         {
-            string sideBySide = Path.Combine(AppContext.BaseDirectory, "FocusOverlay.exe");
-            if (File.Exists(sideBySide)) return sideBySide;
-            return Path.Combine(AppContext.BaseDirectory, "overlay", "FocusOverlay.exe");
+            string isolated = Path.Combine(AppContext.BaseDirectory, "overlay", "FocusOverlay.exe");
+            if (File.Exists(isolated)) return isolated;
+            return Path.Combine(AppContext.BaseDirectory, "FocusOverlay.exe");
         }
     }
 
@@ -63,8 +63,8 @@ public sealed class OverlayController : IDisposable
     {
         lock (_gate)
         {
-            _profile = profile;
-            _profileJson = profile is null ? null : ProfileCodec.Serialize(profile);
+            _profile = profile?.Clone();
+            _profileJson = _profile is null ? null : ProfileCodec.Serialize(_profile);
             _profileRevision++;
         }
     }
@@ -195,7 +195,7 @@ public sealed class OverlayController : IDisposable
         var result = new Dictionary<string, float[]>();
         if (profile is null) return result;
 
-        foreach (var element in profile.Elements)
+        foreach (var element in profile.Elements.ToArray().OrderByDescending(e => e.WindowSeconds))
         {
             if (element.Kind != HudElementKind.Graph || element.Metric == MetricId.None) continue;
             string key = element.Metric.ToString();

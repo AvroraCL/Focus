@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Diagnostics.Tracing;
 using Microsoft.Diagnostics.Tracing.Session;
-using Microsoft.Diagnostics.Tracing.Session;
 
 namespace Focus.Telemetry.Frames;
 
@@ -62,8 +61,14 @@ public sealed class FrameCaptureService : IDisposable
                 EnableProvider();
                 _session.Source.AllEvents += OnEvent;
                 _running = true;
+                var session = _session;
                 _processing = Task.Factory.StartNew(
-                    () => _session?.Source.Process(),
+                    () =>
+                    {
+                        try { session.Source.Process(); }
+                        catch (Exception ex) { LastError = ex.Message; }
+                        finally { _running = false; }
+                    },
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning,
                     TaskScheduler.Default);
@@ -176,6 +181,7 @@ public sealed class FrameCaptureService : IDisposable
         {
             // ignore
         }
+        try { _processing?.Wait(1000); } catch { /* LastError is recorded by the worker. */ }
         _session = null;
         _processing = null;
     }

@@ -66,6 +66,7 @@ public partial class EditorPage : UserControl
         Loc.Inst.LanguageChanged += OnLanguageChanged;
         Loaded += (_, _) =>
         {
+            _liveRefresh.Start();
             LoadProfileChoices();
             var target = _services.ActiveProfile;
             if (_services.Profiles.IsPreset(target.Id))

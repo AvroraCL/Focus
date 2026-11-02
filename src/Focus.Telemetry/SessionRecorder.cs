@@ -8,10 +8,12 @@ public sealed class SessionRecorder
 {
     private readonly object _gate = new();
     private readonly List<double> _frames = new();
-    private double _gpuSum, _cpuSum, _gpuTempPeak, _gpuPowerPeak, _cpuPowerPeak;
-    private int _hardwareSamples;
+    private double _gpuSum, _cpuSum;
+    private double? _gpuTempPeak, _gpuPowerPeak, _cpuPowerPeak;
+    private int _gpuSamples, _cpuSamples;
+    private volatile bool _recording;
 
-    public bool IsRecording { get; private set; }
+    public bool IsRecording { get => _recording; private set => _recording = value; }
     public DateTimeOffset StartedAt { get; private set; }
     public int FrameCount { get { lock (_gate) return _frames.Count; } }
 
@@ -20,8 +22,9 @@ public sealed class SessionRecorder
         lock (_gate)
         {
             _frames.Clear();
-            _gpuSum = _cpuSum = _gpuTempPeak = _gpuPowerPeak = _cpuPowerPeak = 0;
-            _hardwareSamples = 0;
+            _gpuSum = _cpuSum = 0;
+            _gpuTempPeak = _gpuPowerPeak = _cpuPowerPeak = null;
+            _gpuSamples = _cpuSamples = 0;
             StartedAt = DateTimeOffset.Now;
             IsRecording = true;
         }
@@ -30,9 +33,10 @@ public sealed class SessionRecorder
     public void AddFrame(double deltaMs)
     {
         if (!IsRecording) return;
-        if (deltaMs <= 0 || deltaMs > 5000) return;
+        if (!double.IsFinite(deltaMs) || deltaMs <= 0) return;
         lock (_gate)
         {
+            if (!IsRecording) return;
             if (_frames.Count < 8_000_000) _frames.Add(deltaMs);
         }
     }
@@ -42,12 +46,12 @@ public sealed class SessionRecorder
         if (!IsRecording) return;
         lock (_gate)
         {
-            _gpuSum += snapshot.GpuUsage ?? 0;
-            _cpuSum += snapshot.CpuUsage ?? 0;
-            _hardwareSamples++;
-            if (snapshot.GpuTemperature is { } t && t > _gpuTempPeak) _gpuTempPeak = t;
-            if (snapshot.GpuPower is { } gp && gp > _gpuPowerPeak) _gpuPowerPeak = gp;
-            if (snapshot.CpuPower is { } cp && cp > _cpuPowerPeak) _cpuPowerPeak = cp;
+            if (!IsRecording) return;
+            if (snapshot.GpuUsage is { } gpu && float.IsFinite(gpu)) { _gpuSum += gpu; _gpuSamples++; }
+            if (snapshot.CpuUsage is { } cpu && float.IsFinite(cpu)) { _cpuSum += cpu; _cpuSamples++; }
+            if (snapshot.GpuTemperature is { } t && float.IsFinite(t)) _gpuTempPeak = Math.Max(_gpuTempPeak ?? t, t);
+            if (snapshot.GpuPower is { } gp && float.IsFinite(gp)) _gpuPowerPeak = Math.Max(_gpuPowerPeak ?? gp, gp);
+            if (snapshot.CpuPower is { } cp && float.IsFinite(cp)) _cpuPowerPeak = Math.Max(_cpuPowerPeak ?? cp, cp);
         }
     }
 
@@ -55,7 +59,7 @@ public sealed class SessionRecorder
     {
         double[] frames;
         SessionStats stats;
-        double gpuAvg, cpuAvg, gpuTemp, gpuPower, cpuPower;
+        double? gpuAvg, cpuAvg, gpuTemp, gpuPower, cpuPower;
         DateTimeOffset started;
 
         lock (_gate)
@@ -64,8 +68,8 @@ public sealed class SessionRecorder
             frames = _frames.ToArray();
             started = StartedAt;
             stats = SessionCalculator.Compute(frames);
-            gpuAvg = _hardwareSamples > 0 ? _gpuSum / _hardwareSamples : 0;
-            cpuAvg = _hardwareSamples > 0 ? _cpuSum / _hardwareSamples : 0;
+            gpuAvg = _gpuSamples > 0 ? _gpuSum / _gpuSamples : null;
+            cpuAvg = _cpuSamples > 0 ? _cpuSum / _cpuSamples : null;
             gpuTemp = _gpuTempPeak;
             gpuPower = _gpuPowerPeak;
             cpuPower = _cpuPowerPeak;

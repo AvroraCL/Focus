@@ -8,3 +8,4 @@ publish/
 TestResults/
 *.log
 *.zip
+target/

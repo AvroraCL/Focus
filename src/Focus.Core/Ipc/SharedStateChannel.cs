@@ -72,6 +72,7 @@ public sealed unsafe class SharedStateChannel : IDisposable
     private const int Magic = 0x53434F46; // "FOCS"
     private const int VersionOffset = 16;
 
+    private readonly Mutex _access = new(false, MapName + ".Access");
     private readonly MemoryMappedFile _map;
     private readonly MemoryMappedViewAccessor _view;
     private byte* _pointer;
@@ -91,10 +92,15 @@ public sealed unsafe class SharedStateChannel : IDisposable
 
         if (IsWriter)
         {
-            *(int*)(_pointer + 0) = Magic;
-            *(int*)(_pointer + 4) = 0;
-            *(int*)(_pointer + 8) = 0;
-            *(long*)(_pointer + VersionOffset) = 0;
+            Enter(Timeout.Infinite);
+            try
+            {
+                *(int*)(_pointer + 0) = Magic;
+                *(int*)(_pointer + 4) = 0;
+                *(int*)(_pointer + 8) = 0;
+                *(long*)(_pointer + VersionOffset) = 0;
+            }
+            finally { _access.ReleaseMutex(); }
         }
     }
 
@@ -122,40 +128,57 @@ public sealed unsafe class SharedStateChannel : IDisposable
         if (!IsWriter) throw new InvalidOperationException("Channel is read-only.");
         if (payload.Length > SlotSize) throw new ArgumentException("Payload too large for shared state slot.");
 
-        int currentSlot = *(int*)(_pointer + 4);
-        int nextSlot = 1 - currentSlot;
-        byte* target = _pointer + HeaderSize + nextSlot * SlotSize;
-        payload.CopyTo(new Span<byte>(target, payload.Length));
-        *(int*)(_pointer + 8) = payload.Length;
-        *(int*)(_pointer + 4) = nextSlot;
-        Interlocked.Increment(ref *(long*)(_pointer + VersionOffset));
+        if (!Enter(100)) throw new TimeoutException("Overlay channel is busy.");
+        try
+        {
+            int currentSlot = *(int*)(_pointer + 4);
+            int nextSlot = 1 - currentSlot;
+            byte* target = _pointer + HeaderSize + nextSlot * SlotSize;
+            payload.CopyTo(new Span<byte>(target, payload.Length));
+            *(int*)(_pointer + 8) = payload.Length;
+            *(int*)(_pointer + 4) = nextSlot;
+            Interlocked.Increment(ref *(long*)(_pointer + VersionOffset));
+        }
+        finally { _access.ReleaseMutex(); }
     }
 
     /// <summary>Reads the newest payload if it changed since the last call.</summary>
     public bool TryReadNewest(out byte[] payload)
     {
-        long version = Volatile.Read(ref *(long*)(_pointer + VersionOffset));
-        if (version == _lastVersion || version == 0)
+        payload = Array.Empty<byte>();
+        if (!Enter(0)) return false;
+        try
         {
-            payload = Array.Empty<byte>();
-            return false;
+            long version = Volatile.Read(ref *(long*)(_pointer + VersionOffset));
+            if (version == _lastVersion || version == 0)
+            {
+                payload = Array.Empty<byte>();
+                return false;
+            }
+
+            int slot = *(int*)(_pointer + 4);
+            int length = *(int*)(_pointer + 8);
+            if (length is <= 0 or > SlotSize)
+            {
+                payload = Array.Empty<byte>();
+                return false;
+            }
+
+            payload = new byte[length];
+            new ReadOnlySpan<byte>(_pointer + HeaderSize + slot * SlotSize, length).CopyTo(payload);
+
+            // Retry if the writer moved to the other slot while we were copying.
+            if (Volatile.Read(ref *(long*)(_pointer + VersionOffset)) != version) return false;
+            _lastVersion = version;
+            return true;
         }
+        finally { _access.ReleaseMutex(); }
+    }
 
-        int slot = *(int*)(_pointer + 4);
-        int length = *(int*)(_pointer + 8);
-        if (length is <= 0 or > SlotSize)
-        {
-            payload = Array.Empty<byte>();
-            return false;
-        }
-
-        payload = new byte[length];
-        new ReadOnlySpan<byte>(_pointer + HeaderSize + slot * SlotSize, length).CopyTo(payload);
-
-        // Retry if the writer moved to the other slot while we were copying.
-        if (Volatile.Read(ref *(long*)(_pointer + VersionOffset)) != version) return false;
-        _lastVersion = version;
-        return true;
+    private bool Enter(int milliseconds)
+    {
+        try { return _access.WaitOne(milliseconds); }
+        catch (AbandonedMutexException) { return true; }
     }
 
     public EventWaitHandle OpenOrCreateExitEvent() =>
@@ -174,5 +197,6 @@ public sealed unsafe class SharedStateChannel : IDisposable
         }
         _view.Dispose();
         _map.Dispose();
+        _access.Dispose();
     }
 }

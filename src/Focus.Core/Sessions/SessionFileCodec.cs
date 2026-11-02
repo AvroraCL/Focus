@@ -39,15 +39,18 @@ public static class SessionFileCodec
             FrameCount = session.FrameTimes.Length,
         };
 
-        using var file = File.Create(path);
-        using var gzip = new GZipStream(file, CompressionLevel.Fastest);
-        using var writer = new BinaryWriter(gzip, Encoding.UTF8, leaveOpen: true);
-        writer.Write(Magic);
-        var metaBytes = JsonSerializer.SerializeToUtf8Bytes(meta, Options);
-        writer.Write(metaBytes.Length);
-        writer.Write(metaBytes);
-        writer.Write(session.FrameTimes.Length);
-        foreach (var t in session.FrameTimes) writer.Write((float)t);
+        using var file = new MemoryStream();
+        using (var gzip = new GZipStream(file, CompressionLevel.Fastest, leaveOpen: true))
+        using (var writer = new BinaryWriter(gzip, Encoding.UTF8, leaveOpen: true))
+        {
+            writer.Write(Magic);
+            var metaBytes = JsonSerializer.SerializeToUtf8Bytes(meta, Options);
+            writer.Write(metaBytes.Length);
+            writer.Write(metaBytes);
+            writer.Write(session.FrameTimes.Length);
+            foreach (var t in session.FrameTimes) writer.Write((float)t);
+        }
+        Focus.Core.Native.AtomicFile.WriteAllBytes(path, file.ToArray());
     }
 
     public static PerformanceSession Load(string path)

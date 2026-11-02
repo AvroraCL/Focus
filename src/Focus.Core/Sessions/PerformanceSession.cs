@@ -1,4 +1,5 @@
 using Focus.Core.Metrics;
+using Focus.Core.Native;
 
 namespace Focus.Core.Sessions;
 
@@ -32,11 +33,11 @@ public sealed class SessionStats
     public double MaxFrameTimeMs { get; set; }
     public int StutterCount { get; set; }
     public double StutterPercent { get; set; }
-    public double AverageGpuUsage { get; set; }
-    public double AverageCpuUsage { get; set; }
-    public double PeakGpuTemperature { get; set; }
-    public double PeakGpuPower { get; set; }
-    public double PeakCpuPower { get; set; }
+    public double? AverageGpuUsage { get; set; }
+    public double? AverageCpuUsage { get; set; }
+    public double? PeakGpuTemperature { get; set; }
+    public double? PeakGpuPower { get; set; }
+    public double? PeakCpuPower { get; set; }
 }
 
 public static class SessionCalculator
@@ -49,36 +50,28 @@ public static class SessionCalculator
 
     public static SessionStats Compute(IReadOnlyList<double> frameTimesMs)
     {
-        var stats = new SessionStats { FrameCount = frameTimesMs.Count };
-        if (frameTimesMs.Count == 0) return stats;
-
-        var sorted = frameTimesMs.Where(t => t > 0).ToArray();
-        Array.Sort(sorted);
-        if (sorted.Length == 0) return stats;
-
-        double total = 0;
-        foreach (var t in sorted) total += t;
-        stats.DurationSeconds = total / 1000.0;
-        stats.AverageFps = stats.DurationSeconds > 0 ? sorted.Length / stats.DurationSeconds : 0;
-        stats.OnePercentLow = FrameTimeline.LowFps(sorted, 0.01);
-        stats.PointOnePercentLow = FrameTimeline.LowFps(sorted, 0.001);
-        stats.MedianFrameTimeMs = FrameTimeline.Percentile(sorted, 0.50);
-        stats.P95FrameTimeMs = FrameTimeline.Percentile(sorted, 0.95);
-        stats.P99FrameTimeMs = FrameTimeline.Percentile(sorted, 0.99);
-        stats.MaxFrameTimeMs = sorted[^1];
-
-        double threshold = stats.MedianFrameTimeMs * StutterFactor;
-        int stutters = 0;
-        foreach (var t in sorted) if (t > threshold) stutters++;
-        stats.StutterCount = stutters;
-        stats.StutterPercent = sorted.Length > 0 ? stutters * 100.0 / sorted.Length : 0;
-        return stats;
+        var frames = frameTimesMs.ToArray();
+        NativeCore.Check(NativeCore.Compute(frames, (uint)frames.Length, out var s));
+        return new SessionStats
+        {
+            FrameCount = (long)s.Count,
+            DurationSeconds = s.Seconds,
+            AverageFps = s.AverageFps,
+            OnePercentLow = s.LowOne,
+            PointOnePercentLow = s.LowPointOne,
+            MedianFrameTimeMs = s.Median,
+            P95FrameTimeMs = s.P95,
+            P99FrameTimeMs = s.P99,
+            MaxFrameTimeMs = s.Maximum,
+            StutterCount = (int)s.Stutters,
+            StutterPercent = s.StutterPercent
+        };
     }
 
     public static double[] FindSpikeIndices(IReadOnlyList<double> frameTimesMs, double factor = StutterFactor, int maxResults = 200)
     {
         if (frameTimesMs.Count == 0) return Array.Empty<double>();
-        var sorted = frameTimesMs.Where(t => t > 0).ToArray();
+        var sorted = frameTimesMs.Where(t => double.IsFinite(t) && t > 0).ToArray();
         if (sorted.Length == 0) return Array.Empty<double>();
         Array.Sort(sorted);
         double threshold = FrameTimeline.Percentile(sorted, 0.5) * factor;

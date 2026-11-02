@@ -21,7 +21,7 @@
   - 需要管理员权限创建 ETW 实时会话（与 Afterburner/RTSS 等同类工具一致）；未提权时明确提示且不显示伪造数据。
   - 仅统计"提交的 Present"，不等同于显示端合成结果；与引擎内置计数可能存在个位数差异（文档说明）。
   - **实测结论（Windows 10 19045）**：`Present` 事件不匹配 0x8000000 或 0x6B 关键字，关键字为 0 时才会投递。最终采用内核级 EventID 过滤：`EnableProvider(guid, Verbose, keywords=0, new TraceEventProviderOptions { EventIDsToEnable = {184} })`。诊断确认会话内只投递 Present 事件（`events=0`），避免了全量 DxgKrnl 事件的解析开销。
-  - 仍保留保护逻辑：若 6 秒内完全没有事件，自动回退为"不过滤"模式（并写入 `%TEMP%\focus-etw.log`），保证在其它 Windows 版本上不会完全采不到帧。
+  - 当前固定使用 EventID 过滤，不再在空闲时回退为全量事件。关键词覆盖也不会关闭 EventID 过滤。
 
 ## D3 · 硬件数据：LibreHardwareMonitorLib（MPL-2.0）
 
@@ -84,3 +84,7 @@
 
 - 环境变量 `FOCUS_INSTANCE` 改变命名对象后缀与数据目录（`%AppData%\Focus-<suffix>`），可并行运行多个实例。
 - 命令行支持 `--page`、`--screenshot`、`--capture-screen`、`--hide-window`、`--attach <exe>`，用于 UI 回归截图与无交互验证。
+
+## D12 · Rust 核心 + WPF 适配层
+
+统计、帧时间线和原子文件写入迁移至 Rust C ABI；WPF、ETW 和硬件采集适配继续保留。共享内存增加进程间 Mutex，避免双槽发布时读到混合元数据。详见 [RUST-MIGRATION.md](RUST-MIGRATION.md)。

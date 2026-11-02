@@ -196,7 +196,7 @@ public sealed class HardwareMonitorService : IDisposable
             vramTotal = Pick(sensors, SensorType.SmallData, "GPU Memory Total");
             gpuPower = Pick(sensors, SensorType.Power, "GPU Package", "GPU Power", "GPU Board Power");
             gpuFan = Pick(sensors, SensorType.Fan, "GPU Fan");
-            if (gpuFan is <= 0) gpuFan = null;
+            if (gpuFan is < 0) gpuFan = null;
         }
 
         float? vramPercent = null;
@@ -241,7 +241,7 @@ public sealed class HardwareMonitorService : IDisposable
         var candidates = new List<ISensor>();
         foreach (var sensor in sensors)
         {
-            if (sensor.SensorType != type || sensor.Value is null) continue;
+            if (sensor.SensorType != type || sensor.Value is null || !float.IsFinite(sensor.Value.Value)) continue;
             candidates.Add(sensor);
         }
         if (candidates.Count == 0) return null;
@@ -253,7 +253,7 @@ public sealed class HardwareMonitorService : IDisposable
             var partial = candidates.FirstOrDefault(s => s.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
             if (partial is not null) return partial.Value;
         }
-        return candidates[0].Value;
+        return null;
     }
 
     public void Stop()

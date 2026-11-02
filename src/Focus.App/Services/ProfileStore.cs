@@ -112,6 +112,7 @@ public sealed class ProfileStore
         catch (Exception ex)
         {
             DataPaths.AppendLog("profile save failed: " + ex.Message);
+            throw;
         }
     }
 

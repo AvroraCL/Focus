@@ -24,6 +24,7 @@ public sealed class TelemetryHub : IDisposable
     private Thread? _tickThread;
     private CancellationTokenSource? _cts;
     private int _ticks;
+    private float _latestFrameTime;
     private FrameStats _stats = new();
     private DateTimeOffset _statsComputedAt;
     private double _lastPresentMs = -1;
@@ -114,6 +115,7 @@ public sealed class TelemetryHub : IDisposable
             _frameTimeFast.Clear();
             foreach (var history in _slowHistory.Values) history.Clear();
             _lastPresentMs = -1;
+            _latestFrameTime = 0;
             _stats = new FrameStats();
             _statsComputedAt = DateTimeOffset.MinValue;
         }
@@ -123,25 +125,28 @@ public sealed class TelemetryHub : IDisposable
 
     private void OnPresent(int pid, double timeMs)
     {
-        _presentCounts.AddOrUpdate(pid, 1, static (_, value) => value + 1);
-        if (pid != TargetPid) return;
-
-        double previous = _lastPresentMs;
-        _lastPresentMs = timeMs;
-        _lastPresentWall = DateTime.UtcNow;
-        Timeline.Add(timeMs);
-
-        if (previous > 0 && timeMs > previous)
+        lock (_gate)
         {
-            double delta = timeMs - previous;
-            if (delta is > 0 and < 5000)
+            _presentCounts.AddOrUpdate(pid, 1, static (_, value) => value + 1);
+            if (pid != _targetPid || !double.IsFinite(timeMs) || timeMs <= _lastPresentMs) return;
+
+            double previous = _lastPresentMs;
+            _lastPresentMs = timeMs;
+            _lastPresentWall = DateTime.UtcNow;
+            Timeline.Add(timeMs);
+
+            if (previous >= 0 && timeMs > previous)
             {
-                Recorder.AddFrame(delta);
-                _fpsFast.Add((float)(1000.0 / delta));
-                _frameTimeFast.Add((float)delta);
+                double delta = timeMs - previous;
+                if (double.IsFinite(delta) && delta > 0)
+                {
+                    Recorder.AddFrame(delta);
+                    _latestFrameTime = (float)delta;
+                }
             }
         }
     }
+
 
     private void TickLoop(CancellationToken token)
     {
@@ -164,6 +169,11 @@ public sealed class TelemetryHub : IDisposable
     }
 
     private void Tick()
+    {
+        lock (_gate) TickLocked();
+    }
+
+    private void TickLocked()
     {
         _ticks++;
         int pid = TargetPid;
@@ -205,7 +215,7 @@ public sealed class TelemetryHub : IDisposable
                 values[MetricId.SessionTime] = _stats.ElapsedSeconds;
                 values[MetricId.FrameCount] = Timeline.TotalFrames;
             }
-            if (_frameTimeFast.TryLast(out float lastFrameTime) && lastFrameTime > 0)
+            if (_latestFrameTime is > 0 and var lastFrameTime)
             {
                 values[MetricId.FrameTime] = lastFrameTime;
             }
@@ -250,6 +260,8 @@ public sealed class TelemetryHub : IDisposable
             coreUsage,
             Capturing);
 
+        if (values.TryGetValue(MetricId.Fps, out var fps)) _fpsFast.Add((float)fps);
+        if (values.TryGetValue(MetricId.FrameTime, out var ft)) _frameTimeFast.Add((float)ft);
         Current = snapshot;
         RecordHistory(values);
         Recorder.ObserveHardware(hardware);
@@ -281,12 +293,12 @@ public sealed class TelemetryHub : IDisposable
 
     private static void Add(Dictionary<MetricId, double> values, MetricId id, float? value)
     {
-        if (value.HasValue && !float.IsNaN(value.Value)) values[id] = value.Value;
+        if (value.HasValue && float.IsFinite(value.Value)) values[id] = value.Value;
     }
 
     public float[] GetHistory(MetricId id, int windowSeconds)
     {
-        int frameSamplesPerSecond = 120; // approximate frames/sec per graph sample budget
+        int frameSamplesPerSecond = 20; // Both consumers use the 20 Hz publication clock
         if (MetricHistory.IsFrameMetric(id))
         {
             int count = Math.Clamp(windowSeconds * frameSamplesPerSecond, 32, 2048);
@@ -318,6 +330,7 @@ public sealed class TelemetryHub : IDisposable
         Capture.Stop();
         Hardware.Stop();
         System.Dispose();
+        Timeline.Dispose();
     }
 
     public void Dispose() => Stop();
