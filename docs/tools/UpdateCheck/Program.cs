@@ -31,6 +31,8 @@ File.WriteAllText(Path.Combine(payload, "overlay", "FocusOverlay.exe"), "fixture
 File.WriteAllText(Path.Combine(target, "Focus.exe"), "old-exe");
 File.WriteAllText(Path.Combine(target, "Focus.dll"), "old");
 File.WriteAllText(Path.Combine(target, "user-data.txt"), "preserve");
+File.WriteAllText(Path.Combine(target, "retired.dll"), "old-component");
+File.WriteAllLines(Path.Combine(target, "focus-installed-files.txt"), ["Focus.exe", "Focus.dll", "retired.dll"]);
 string archive = Path.Combine(job, "package.zip");
 ZipFile.CreateFromDirectory(payload, archive);
 string hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(archive)));
@@ -61,7 +63,10 @@ try
     if (!File.Exists(Path.Combine(target, "restarted.txt"))) throw new Exception("Updated app did not restart");
     if (File.ReadAllText(Path.Combine(target, "Focus.dll")) != "new" || File.ReadAllText(Path.Combine(job, "backup", "Focus.dll")) != "old") throw new Exception("Replacement or backup failed");
     if (File.ReadAllText(Path.Combine(target, "user-data.txt")) != "preserve") throw new Exception("User data was changed");
-    Console.WriteLine("PASS: real helper staged, waited for parent exit, backed up, installed, preserved data and restarted. " + root);
+    var owned = File.ReadAllLines(Path.Combine(target, "focus-installed-files.txt"));
+    if (!owned.Contains("overlay/FocusOverlay.exe") || !owned.Contains("retired.dll") || owned.Contains("user-data.txt"))
+        throw new Exception("Installed-file ownership was not maintained");
+    Console.WriteLine("PASS: real helper staged, waited for parent exit, backed up, installed, preserved data and uninstall ownership, and restarted. " + root);
     return 0;
 }
 finally

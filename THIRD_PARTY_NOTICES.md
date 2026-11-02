@@ -4,7 +4,7 @@ Focus's original source code is licensed under the [MIT License](LICENSE), copyr
 
 ## Runtime dependencies
 
-The versions below are taken from the restored NuGet metadata for the v0.0.3 development build.
+The versions below are taken from the restored NuGet metadata for v0.0.3.
 
 | Component | Version | License / notice | Source |
 | --- | --- | --- | --- |
@@ -17,6 +17,8 @@ The versions below are taken from the restored NuGet metadata for the v0.0.3 dev
 | Mono.Posix.NETStandard | 1.0.0 | Microsoft Corporation; see the package's [license link](https://go.microsoft.com/fwlink/?linkid=869050) | [NuGet package](https://www.nuget.org/packages/Mono.Posix.NETStandard/1.0.0) |
 
 Microsoft.Diagnostics.NETCore.Client, Microsoft.Extensions.*, and the System.* packages resolved by the application declare MIT in their NuGet metadata. .NET runtime files included by a self-contained publish retain Microsoft's own license and third-party notices.
+
+The self-contained EXE installer bundles .NET 10 runtime files. Their license files and runtime third-party notices are included in `licenses/Microsoft.NETCore.App/` and `licenses/Microsoft.WindowsDesktop.App/` in the installed directory.
 
 Focus consumes these NuGet packages without modifying their source. Hardware libraries may include additional embedded components and upstream notices; consult the exact upstream version when redistributing them. The authoritative dependency versions and license declarations are in each restored package's `.nuspec` file and `src/Focus.App/obj/project.assets.json`, not the Focus MIT file.
 

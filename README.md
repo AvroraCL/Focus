@@ -44,16 +44,17 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 
 | 版本 | 获取方式 | 说明 |
 | --- | --- | --- |
+| v0.0.3 安装版 · 推荐 | [Focus-Setup-0.0.3-win-x64.exe](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-Setup-0.0.3-win-x64.exe) | 自带 .NET 运行时、中英双语安装向导和卸载程序 |
 | v0.0.3 | [Focus-v0.0.3-win-x64.zip](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-v0.0.3-win-x64.zip) | 解压后运行 Focus.exe，需要 .NET 10 Desktop Runtime |
 
-校验文件：[Focus-v0.0.3-win-x64.zip.sha256](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-v0.0.3-win-x64.zip.sha256)。可使用 PowerShell `Get-FileHash -Algorithm SHA256` 核对下载文件。
+校验文件：[EXE SHA-256](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-Setup-0.0.3-win-x64.exe.sha256) · [ZIP SHA-256](https://github.com/AvroraCL/Focus/releases/download/v0.0.3/Focus-v0.0.3-win-x64.zip.sha256)。可使用 PowerShell `Get-FileHash -Algorithm SHA256` 核对下载文件。
 
 完整版本记录见 [Releases](https://github.com/AvroraCL/Focus/releases) 和 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 系统要求
 
 - Windows 10 22H2 或 Windows 11，**x64**。Windows 11 的完整兼容性仍待实测。
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)；自行构建的自包含包无需另外安装运行时。
+- 安装版自带运行时；v0.0.3 ZIP 便携版需要 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)。
 - ETW 帧采集需要管理员权限。普通权限可以打开界面并读取可用的硬件指标，界面会提示如何提权。
 - 建议使用游戏的**无边框窗口化**模式，让桌面覆盖层正常叠加。
 
@@ -61,13 +62,21 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 
 ### 安装与使用
 
-1. 下载 ZIP，**完整解压**到一个目录，保留 `overlay/` 和其他随包文件，再启动 `Focus.exe`。
+1. 下载 EXE 并按向导安装，从开始菜单打开 Focus。也可下载 ZIP，**完整解压**到一个目录，再运行 `Focus.exe`。
 2. 要监测游戏帧率时，点击概览页的“以管理员身份重启”。
 3. 启动游戏，在概览页选择对应进程，或等待自动识别。
 4. 打开“配置文件”，选择内置预设；也可以进入“HUD 编辑器”调整组件和位置。
 5. 显示 HUD。需要复盘时开始记录，结束后在“会话记录”中查看统计、曲线和导出结果。
 
 “使用预设”直接应用布局；“编辑”会创建可修改副本。关闭窗口默认收回托盘，完全退出请使用托盘菜单。
+
+### 卸载与完全清除
+
+先从托盘退出 Focus，再从 Windows“设置 → 应用”或开始菜单的“卸载 Focus”运行卸载程序。也可运行安装目录内的 `unins000.exe`。
+
+卸载时选择“是”会删除程序、快捷方式、卸载登记，以及当前用户 `%AppData%\Focus` 内的配置、HUD、会话、日志和更新缓存；选择“否”保留个人数据，方便重装。完全清除不可恢复。安装版默认位于 `%LocalAppData%\Programs\Focus`，只为当前用户安装。
+
+运行中的 Focus 会阻止安装和卸载，不会强制结束录制。自定义开发实例、外部导出文件及其他用户的数据不会被清理。更多细节和静默命令见 [安装与卸载说明](docs/INSTALLER.md)。
 
 ### HUD 预设
 
@@ -131,7 +140,7 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 - 普通置顶窗口不能叠加到独占全屏画面；推荐无边框窗口化。具体游戏与反作弊软件的兼容性需逐项验证。
 - 指标缺失时显示 `—`；CPU 温度、功耗或某些 GPU 传感器可能因硬件、权限或驱动而不可用。
 - 实时低帧统计基于最近最多 60,000 个 Present；录制统计基于已保存会话。单次会话当前最多记录 8,000,000 个帧间隔。
-- 已通过 62 项 .NET 测试、WPF 交互检查、预设渲染检查和本地更新流程验证；客户端公网升级、安装向导、长时间运行、Windows 11、多显示器 / 高 DPI 与更多真实游戏环境仍待验证。
+- 已通过 65 项 .NET 测试、WPF 交互检查、预设渲染检查和本地更新流程验证；客户端公网升级、长时间运行、Windows 11、多显示器 / 高 DPI 与更多真实游戏环境仍待验证。安装与卸载回归见 [安装说明](docs/INSTALLER.md)。
 
 具体边界见 [兼容性说明](docs/COMPATIBILITY.md)、[Rust 迁移说明](docs/RUST-MIGRATION.md) 和 [开发进度](PROGRESS.md)。
 
@@ -158,7 +167,7 @@ Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会
 - **PowerShell 7**，确保 `pwsh` 在 PATH 中。
 - **Rust 工具链**（最低 Rust 1.82），安装 `x86_64-pc-windows-gnu` target。
 - 可用于 Windows x64 的 **MinGW-w64 / GNU 链接工具链**，并配置到 PATH。当前构建脚本固定使用 GNU target。
-- 可选：Inno Setup 6，用于编译安装程序；安装流程尚未完成本次验证。
+- 可选：Inno Setup 7，用于编译安装程序。
 
 ### 从源码构建
 
@@ -183,8 +192,8 @@ pwsh -File build.ps1
 # 自包含版：随包携带运行时
 pwsh -File build.ps1 -SelfContained
 
-# 可选安装程序（先完成上面的发布）
-iscc installer/Focus.iss
+# 自包含 EXE 安装包（独立输出，不覆盖已有 ZIP）
+pwsh -File build-installer.ps1
 ```
 
 `build.ps1` 发布主程序、覆盖层与更新程序，输出到 `artifacts/publish/`：
@@ -196,7 +205,9 @@ artifacts/publish/
 └── Focus-v0.0.3-win-x64.zip.sha256    SHA-256 校验文件
 ```
 
-发布时将 ZIP 和校验文件一起上传到对应 GitHub Release。版本维护在 `Directory.Build.props` 和 `rust/focus-native/Cargo.toml`；安装器从应用产物读取版本。许可证与第三方说明随应用目录和 ZIP 一起分发。
+`build-installer.ps1` 独立发布自包含产物，输出 `artifacts/installer/Focus-Setup-0.0.3-win-x64.exe` 和 `.exe.sha256`。可通过 `-CompilerPath` 指定 Inno Setup 编译器。
+
+发布时将 ZIP、EXE 和各自校验文件一起上传到对应 GitHub Release。版本维护在 `Directory.Build.props` 和 `rust/focus-native/Cargo.toml`；安装器从应用产物读取版本。许可证与第三方说明随应用目录和 ZIP 一起分发。
 
 ### 测试与预览
 

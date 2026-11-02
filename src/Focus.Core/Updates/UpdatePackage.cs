@@ -5,6 +5,7 @@ namespace Focus.Core.Updates;
 
 public static class UpdatePackage
 {
+    public const string InstalledFilesManifest = "focus-installed-files.txt";
     public static string ChildPath(string root, string relative)
     {
         if (string.IsNullOrWhiteSpace(relative) || relative.Contains(':') || relative.Contains('\\') ||
@@ -66,6 +67,18 @@ public static class UpdatePackage
         if (Directory.Exists(backup)) throw new IOException("Backup directory already exists.");
         var files = Directory.GetFiles(stage, "*", SearchOption.AllDirectories)
             .Select(p => Path.GetRelativePath(stage, p).Replace('\\', '/')).ToArray();
+        string manifest = ChildPath(target, InstalledFilesManifest);
+        if (File.Exists(manifest))
+        {
+            // Installed copies retain ownership across ZIP updates so uninstall also removes
+            // new/retired payload files. Do not claim arbitrary files found in the app folder.
+            var owned = File.ReadAllLines(manifest).Concat(files).Append(InstalledFilesManifest)
+                .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).ToArray();
+            foreach (string relative in owned) ChildPath(target, relative);
+            File.WriteAllLines(ChildPath(stage, InstalledFilesManifest), owned, new System.Text.UTF8Encoding(true));
+            files = files.Where(p => !p.Equals(InstalledFilesManifest, StringComparison.OrdinalIgnoreCase))
+                .Append(InstalledFilesManifest).ToArray();
+        }
         foreach (var relative in files) { ChildPath(stage, relative); ChildPath(target, relative); ChildPath(backup, relative); }
         Directory.CreateDirectory(backup);
         var applied = new List<(string Relative, bool Existed)>();

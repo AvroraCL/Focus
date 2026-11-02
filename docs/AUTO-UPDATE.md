@@ -14,6 +14,7 @@
 - 校验：优先使用 GitHub asset 的 `sha256:` digest；否则使用同名 `.zip.sha256` 文件。没有有效 SHA-256 的新版本不能安装。
 - `pwsh -File build.ps1` 发布 app、overlay 和 updater，输出 ZIP 与 SHA-256 文件。版本来自 `Directory.Build.props`，Inno Setup 从产物读取版本。发布时把 ZIP 和校验文件一起上传，标签版本必须一致。
 - v0.0.3 开始随发布包附带更新客户端。v0.0.2 没有此更新客户端，首次升级需手动解压新版。
+- v0.0.3 后补的 EXE 安装版自带运行时。后续发布的标准更新 ZIP 必须使用 `build.ps1 -SelfContained`，使安装版更新后继续无需系统运行时；不要用框架依赖 ZIP 覆盖自包含安装。v0.0.3 原有 ZIP 保持不变，同版本不会触发更新。
 
 GitHub 接口依据：[Releases REST API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)。
 

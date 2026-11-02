@@ -170,6 +170,49 @@ public sealed class UpdateTests : IDisposable
     }
 
     [Fact]
+    public void InstalledUpdateTracksNewAndRetiredFilesButNotUserFiles()
+    {
+        Directory.CreateDirectory(FileAt("stage")); Directory.CreateDirectory(FileAt("app"));
+        File.WriteAllText(FileAt("app/Focus.exe"), "old");
+        File.WriteAllText(FileAt("app/user.txt"), "keep");
+        File.WriteAllText(FileAt("app/retired.dll"), "old");
+        File.WriteAllLines(FileAt("app/" + UpdatePackage.InstalledFilesManifest), ["Focus.exe", "retired.dll"]);
+        File.WriteAllText(FileAt("stage/Focus.exe"), "new");
+        File.WriteAllText(FileAt("stage/new.dll"), "new");
+        UpdatePackage.Apply(FileAt("stage"), FileAt("app"), FileAt("backup"));
+        var owned = File.ReadAllLines(FileAt("app/" + UpdatePackage.InstalledFilesManifest));
+        Assert.Contains("new.dll", owned);
+        Assert.Contains("retired.dll", owned);
+        Assert.DoesNotContain("user.txt", owned);
+        Assert.Equal(new[] { "Focus.exe", "retired.dll" }, File.ReadAllLines(FileAt("backup/" + UpdatePackage.InstalledFilesManifest)));
+    }
+
+    [Fact]
+    public void FailedInstalledUpdatePreservesOwnershipAndOldApplication()
+    {
+        Directory.CreateDirectory(FileAt("stage")); Directory.CreateDirectory(FileAt("app"));
+        File.WriteAllText(FileAt("app/Focus.exe"), "old");
+        File.WriteAllText(FileAt("app/" + UpdatePackage.InstalledFilesManifest), "Focus.exe\n");
+        File.WriteAllText(FileAt("stage/Focus.exe"), "new");
+        File.WriteAllText(FileAt("stage/z-blocked.dll"), "new");
+        Directory.CreateDirectory(FileAt("app/z-blocked.dll"));
+        Assert.Throws<AggregateException>(() => UpdatePackage.Apply(FileAt("stage"), FileAt("app"), FileAt("backup")));
+        Assert.Equal("old", File.ReadAllText(FileAt("app/Focus.exe")));
+        Assert.Equal("Focus.exe\n", File.ReadAllText(FileAt("app/" + UpdatePackage.InstalledFilesManifest)));
+    }
+
+    [Fact]
+    public void RejectsEscapingOwnershipBeforeChangingApplication()
+    {
+        Directory.CreateDirectory(FileAt("stage")); Directory.CreateDirectory(FileAt("app"));
+        File.WriteAllText(FileAt("app/Focus.exe"), "old");
+        File.WriteAllText(FileAt("app/" + UpdatePackage.InstalledFilesManifest), "../outside.txt\n");
+        File.WriteAllText(FileAt("stage/Focus.exe"), "new");
+        Assert.Throws<InvalidDataException>(() => UpdatePackage.Apply(FileAt("stage"), FileAt("app"), FileAt("backup")));
+        Assert.Equal("old", File.ReadAllText(FileAt("app/Focus.exe")));
+    }
+
+    [Fact]
     public void FailedCopyRestoresPreviouslyOverwrittenFiles()
     {
         Directory.CreateDirectory(FileAt("stage")); Directory.CreateDirectory(FileAt("app"));

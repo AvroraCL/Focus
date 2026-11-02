@@ -1,7 +1,8 @@
 param(
     [switch]$SelfContained,
     [string]$Runtime = "win-x64",
-    [switch]$NoZip
+    [switch]$NoZip,
+    [string]$PublishDirectory = "artifacts/publish"
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,7 +18,7 @@ if (-not $sdks) {
 }
 Write-Host "dotnet: $dotnet"
 
-$publishRoot = Join-Path $root "artifacts/publish"
+$publishRoot = [System.IO.Path]::GetFullPath((Join-Path $root $PublishDirectory))
 $appOut = Join-Path $publishRoot "app"
 $overlayOut = Join-Path $publishRoot "overlay"
 $updaterOut = Join-Path $publishRoot "updater"
@@ -26,9 +27,17 @@ Write-Host "== Focus release build ==" -ForegroundColor Cyan
 Write-Host "runtime=$Runtime selfContained=$SelfContained"
 
 $resolvedPublish = [System.IO.Path]::GetFullPath($publishRoot)
-$expectedPublish = [System.IO.Path]::GetFullPath((Join-Path $root 'artifacts/publish'))
-if ($resolvedPublish -ne $expectedPublish -or -not $resolvedPublish.StartsWith([System.IO.Path]::GetFullPath($root) + [System.IO.Path]::DirectorySeparatorChar)) {
+$artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $root 'artifacts'))
+if (-not $resolvedPublish.StartsWith($artifactsRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw 'Unsafe publish output path'
+}
+# Refuse traversal through directory links before recursive cleanup.
+$ancestor = $resolvedPublish
+while ($ancestor -and $ancestor -ne $root) {
+    if ((Test-Path -LiteralPath $ancestor) -and ((Get-Item -LiteralPath $ancestor -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw "Publish path contains a directory link: $ancestor"
+    }
+    $ancestor = Split-Path -Parent $ancestor
 }
 if (Test-Path -LiteralPath $resolvedPublish) {
     Remove-Item -LiteralPath $resolvedPublish -Recurse -Force
