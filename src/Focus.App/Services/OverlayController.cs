@@ -233,7 +233,11 @@ public sealed class OverlayController : IDisposable
         {
             try
             {
-                if (!_process.WaitForExit(1200)) _process.Kill(entireProcessTree: false);
+                if (!_process.WaitForExit(1200))
+                {
+                    _process.Kill(entireProcessTree: false);
+                    _process.WaitForExit(3000);
+                }
             }
             catch
             {

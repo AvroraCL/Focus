@@ -20,11 +20,17 @@ Write-Host "dotnet: $dotnet"
 $publishRoot = Join-Path $root "artifacts/publish"
 $appOut = Join-Path $publishRoot "app"
 $overlayOut = Join-Path $publishRoot "overlay"
+$updaterOut = Join-Path $publishRoot "updater"
 
 Write-Host "== Focus release build ==" -ForegroundColor Cyan
 Write-Host "runtime=$Runtime selfContained=$SelfContained"
 
-Remove-Item $publishRoot -Recurse -Force -ErrorAction SilentlyContinue
+$resolvedPublish = [System.IO.Path]::GetFullPath($publishRoot)
+$expectedPublish = [System.IO.Path]::GetFullPath((Join-Path $root 'artifacts/publish'))
+if ($resolvedPublish -ne $expectedPublish -or -not $resolvedPublish.StartsWith([System.IO.Path]::GetFullPath($root) + [System.IO.Path]::DirectorySeparatorChar)) {
+    throw 'Unsafe publish output path'
+}
+Remove-Item -LiteralPath $resolvedPublish -Recurse -Force -ErrorAction SilentlyContinue
 
 $common = @(
     "-c", "Release",
@@ -44,9 +50,15 @@ Write-Host "-- publishing app"
 & $dotnet publish "src/Focus.App/Focus.App.csproj" @common -o $appOut
 if ($LASTEXITCODE -ne 0) { throw "app publish failed" }
 
+Write-Host "-- publishing updater"
+& $dotnet publish "src/Focus.Updater/Focus.Updater.csproj" @common -o $updaterOut
+if ($LASTEXITCODE -ne 0) { throw "updater publish failed" }
+Copy-Item -LiteralPath $updaterOut -Destination (Join-Path $appOut 'updater') -Recurse
+
 # Overlay ships beside the app (resolver prefers the overlay/ subfolder).
 $appOverlay = Join-Path $appOut "overlay"
-Remove-Item $appOverlay -Recurse -Force -ErrorAction SilentlyContinue
+if (-not [System.IO.Path]::GetFullPath($appOverlay).StartsWith($resolvedPublish + [System.IO.Path]::DirectorySeparatorChar)) { throw 'Unsafe overlay output path' }
+Remove-Item -LiteralPath $appOverlay -Recurse -Force -ErrorAction SilentlyContinue
 Copy-Item $overlayOut $appOverlay -Recurse
 Remove-Item (Join-Path $appOut "FocusOverlay.exe") -Force -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $appOut "FocusOverlay.dll") -Force -ErrorAction SilentlyContinue
@@ -58,6 +70,8 @@ if (-not $NoZip) {
     $zip = Join-Path $publishRoot "Focus-v$version-$Runtime.zip"
     Write-Host "-- creating $zip"
     Compress-Archive -Path (Join-Path $appOut "*") -DestinationPath $zip -Force
+    $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+    [System.IO.File]::WriteAllText($zip + '.sha256', "$hash  $([System.IO.Path]::GetFileName($zip))`n", [System.Text.UTF8Encoding]::new($false))
 }
 
 Write-Host "done: $appOut" -ForegroundColor Green

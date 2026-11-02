@@ -4,22 +4,24 @@ using Focus.Core.Profiles;
 namespace Focus.Hud.Presets;
 
 /// <summary>Built-in HUD presets. Users can duplicate any of them into their own profile.</summary>
-public static class PresetLibrary
+public static partial class PresetLibrary
 {
     public const string MinimalId = "preset-minimal";
     public const string ClassicId = "preset-classic";
     public const string AnalysisId = "preset-analysis";
 
-    public static IReadOnlyList<HudProfile> CreateAll() => new[] { Minimal(), Classic(), Analysis() };
-
-    public static HudProfile Create(string id) => id switch
+    private static readonly IReadOnlyDictionary<string, Func<HudProfile>> Factories = new Dictionary<string, Func<HudProfile>>
     {
-        MinimalId => Minimal(),
-        AnalysisId => Analysis(),
-        _ => Classic(),
+        [MinimalId] = Minimal, [ClassicId] = Classic, [AnalysisId] = Analysis,
+        [SwissId] = Swiss, [CompetitiveId] = Competitive, [HardwareId] = Hardware,
+        [ThermalId] = Thermal, [BenchmarkId] = Benchmark, [RibbonId] = Ribbon,
     };
 
-    public static bool IsPresetId(string? id) => id is MinimalId or ClassicId or AnalysisId;
+    public static IReadOnlyList<HudProfile> CreateAll() => Factories.Values.Select(create => create()).ToArray();
+
+    public static HudProfile Create(string id) => Factories.TryGetValue(id, out var create) ? create() : Classic();
+
+    public static bool IsPresetId(string? id) => id is not null && Factories.ContainsKey(id);
 
     private const string Surface = "#B8000000";
     private const string Hairline = "#1FFFFFFF";

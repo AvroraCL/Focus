@@ -5,6 +5,7 @@
     <Project Path="src/Focus.Hud/Focus.Hud.csproj" />
     <Project Path="src/Focus.Overlay/Focus.Overlay.csproj" />
     <Project Path="src/Focus.Telemetry/Focus.Telemetry.csproj" />
+    <Project Path="src/Focus.Updater/Focus.Updater.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Focus.Tests/Focus.Tests.csproj" />

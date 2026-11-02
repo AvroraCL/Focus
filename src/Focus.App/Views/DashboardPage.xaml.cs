@@ -52,6 +52,7 @@ public partial class DashboardPage : UserControl
 
     private void Update()
     {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(Update)); return; }
         var hub = _services.Telemetry;
         var snapshot = hub.Current;
         var hardware = hub.Hardware.Current;
@@ -67,7 +68,7 @@ public partial class DashboardPage : UserControl
         LiveDot.Fill = live ? (Brush)FindResource("Brush.Success") : (Brush)FindResource("Brush.TextMuted");
 
         FpsText.Text = fps is null ? "—" : fps.Value.ToString("F0");
-        FpsText.FontSize = fps is null ? 46 : 62;
+        FpsText.FontSize = fps is null ? 72 : 88;
         FpsText.Foreground = fps is null ? (Brush)FindResource("Brush.TextMuted") : (Brush)FindResource("Brush.Text");
         FrameTimeText.Text = FormatMetric(snapshot, MetricId.FrameTime, 2);
         FrameStatusText.Text = hasTarget && !live ? Loc.Inst["dashboard.noFrames"] : string.Empty;

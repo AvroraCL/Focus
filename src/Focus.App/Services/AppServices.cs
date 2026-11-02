@@ -11,6 +11,7 @@ public sealed class AppServices : IDisposable
     public SettingsService Settings { get; } = new();
     public ProfileStore Profiles { get; } = new();
     public SessionStore Sessions { get; } = new();
+    public UpdateService Updates { get; } = new();
     public TelemetryHub Telemetry { get; } = new();
     public OverlayController Overlay { get; private set; } = null!;
     public GameWatcher Games { get; private set; } = null!;
@@ -183,6 +184,7 @@ public sealed class AppServices : IDisposable
 
     public void Shutdown()
     {
+        Updates.Dispose();
         try
         {
             if (IsRecording) StopRecording();

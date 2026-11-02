@@ -45,7 +45,8 @@ public sealed class HotkeyService : IDisposable
     /// <summary>Registers a binding. Returns false when the combination is already taken.</summary>
     public bool Register(HotkeyBinding binding, Action callback)
     {
-        if (!binding.Enabled || binding.VirtualKey == 0 || _source is null) return false;
+        if (!binding.Enabled || binding.VirtualKey == 0) return true;
+        if (_source is null) return false;
 
         uint modifiers = MOD_NOREPEAT;
         if (binding.Control) modifiers |= MOD_CONTROL;

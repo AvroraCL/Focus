@@ -4,14 +4,15 @@
              xmlns:loc="clr-namespace:Focus.App.Localization"
              Background="Transparent">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28,18,22,28" MaxWidth="1240" HorizontalAlignment="Stretch">
-            <Grid Margin="0,2,0,16">
+        <StackPanel Margin="28,26,22,28" MaxWidth="1240" HorizontalAlignment="Stretch">
+            <TextBlock Text="03 / HUD LIBRARY" Foreground="{StaticResource Brush.Accent}" FontSize="11" FontWeight="Bold" Margin="0,0,0,12" />
+            <Grid Margin="0,2,0,24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding [profiles.myProfileList], Source={x:Static loc:Loc.Inst}}"
-                           Style="{StaticResource Text.SectionLabel}" VerticalAlignment="Center" />
+                           Style="{StaticResource Text.Heading}" VerticalAlignment="Center" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Style="{StaticResource Btn}" Click="OnImport"
                             Content="{Binding [profiles.import], Source={x:Static loc:Loc.Inst}}" />
@@ -20,10 +21,15 @@
                 </StackPanel>
             </Grid>
 
+            <TextBox x:Name="ProfileSearch" Style="{StaticResource Input.Search}" Tag="{Binding [profiles.search], Source={x:Static loc:Loc.Inst}}" Height="38" Margin="0,0,0,18" VerticalContentAlignment="Center"
+                     TextChanged="OnSearchChanged" ToolTip="{Binding [profiles.search], Source={x:Static loc:Loc.Inst}}"
+                     AutomationProperties.Name="{Binding [profiles.search], Source={x:Static loc:Loc.Inst}}" />
+            <TextBlock x:Name="SearchEmptyState" Visibility="Collapsed" Text="{Binding [common.noResults], Source={x:Static loc:Loc.Inst}}"
+                       Style="{StaticResource Text.Caption}" Margin="0,0,0,18" />
             <WrapPanel x:Name="ProfileGrid" />
 
             <Border x:Name="EmptyState" Background="{StaticResource Brush.Surface}"
-                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12"
+                    BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="0"
                     Padding="24" Margin="0,0,0,18">
                 <StackPanel>
                     <TextBlock Text="{Binding [profiles.empty], Source={x:Static loc:Loc.Inst}}"

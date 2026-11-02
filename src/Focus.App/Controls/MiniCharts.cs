@@ -16,7 +16,7 @@ public sealed class Sparkline : FrameworkElement
         set => SetValue(ValuesProperty, value);
     }
 
-    public Color StrokeColor { get; set; } = Color.FromRgb(0x4C, 0x9A, 0xFF);
+    public Color StrokeColor { get; set; } = Color.FromRgb(0xDB, 0x30, 0x24);
     public double StrokeThickness { get; set; } = 1.5;
     public bool FillArea { get; set; } = true;
     public double FillOpacity { get; set; } = 0.16;
@@ -91,9 +91,9 @@ public sealed class MetricBar : FrameworkElement
     }
 
     public double Maximum { get; set; } = 100;
-    public Color TrackColor { get; set; } = Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF);
-    public Color FillColor { get; set; } = Color.FromRgb(0x4C, 0x9A, 0xFF);
-    public double Radius { get; set; } = 3;
+    public Color TrackColor { get; set; } = Color.FromRgb(0xDE, 0xDD, 0xD6);
+    public Color FillColor { get; set; } = Color.FromRgb(0xDB, 0x30, 0x24);
+    public double Radius { get; set; } = 0;
 
     protected override void OnRender(DrawingContext dc)
     {

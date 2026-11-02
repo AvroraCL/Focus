@@ -75,6 +75,7 @@ public partial class SettingsPage : UserControl
         UiRefreshCombo.SelectedIndex = Array.IndexOf(new[] { 5, 8, 10, 15, 20, 30 }, _services.Settings.Current.UiRefreshHz) is var refreshIndex && refreshIndex >= 0 ? refreshIndex : 2;
 
         CloseToTrayCheck.IsChecked = _services.Settings.Current.CloseToTray;
+        AutoUpdateCheck.IsChecked = _services.Settings.Current.CheckForUpdates;
         StartMinimizedCheck.IsChecked = _services.Settings.Current.StartMinimized;
         OnlyWhenFocusedCheck.IsChecked = _services.Settings.Current.OnlyWhenFocused;
         AutoRecordCheck.IsChecked = _services.Settings.Current.RecordAutomatically;
@@ -91,6 +92,7 @@ public partial class SettingsPage : UserControl
 
     private void UpdateStatus()
     {
+        UpdateUpdateStatus();
         bool elevated = _services.IsElevated;
         AdminDot.Fill = elevated ? (Brush)FindResource("Brush.Success") : (Brush)FindResource("Brush.Warning");
         AdminStatus.Text = Loc.Inst[elevated ? "settings.elevated" : "settings.notElevated"];
@@ -109,7 +111,13 @@ public partial class SettingsPage : UserControl
     {
         if (_loading) return;
         _services.ApplySettings();
-        SavedIndicator.Text = Loc.Inst["settings.saved"];
+        SavedIndicator.BeginAnimation(OpacityProperty, null);
+        bool saved = _services.Settings.LastSaveError is null;
+        SavedIndicator.Foreground = (Brush)FindResource(saved ? "Brush.Success" : "Brush.Danger");
+        SavedIndicator.ToolTip = _services.Settings.LastSaveError;
+        SavedIndicator.Text = Loc.Inst[saved ? "settings.saved" : "settings.saveFailed"];
+        SavedIndicator.Opacity = 1;
+        if (!saved) return;
         SavedIndicator.Opacity = 1;
         var fade = new System.Windows.Media.Animation.DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(900))
         {
@@ -282,5 +290,56 @@ public partial class SettingsPage : UserControl
         {
             MessageBox.Show(ex.Message, Loc.Inst["msg.error"]);
         }
+    }
+
+    private void UpdateUpdateStatus()
+    {
+        var updates = _services.Updates;
+        UpdateVersion.Text = "v" + updates.CurrentVersion.ToString(3);
+        UpdateState.Text = Loc.Inst["update." + updates.Phase.ToString().ToLowerInvariant()];
+        UpdateState.Foreground = (Brush)FindResource(updates.Phase == UpdatePhase.Failed ? "Brush.Danger" : "Brush.Text");
+        UpdateDetail.Text = updates.Error ?? (updates.Release is not null
+            ? $"v{updates.Release.Version} · {updates.Release.Size / 1048576.0:F1} MB · " + Loc.Inst["update.source"]
+            : Loc.Inst["update.source"]);
+        if (updates.LastChecked is not null) UpdateDetail.Text += " · " + updates.LastChecked.Value.ToLocalTime().ToString("MM-dd HH:mm");
+        UpdateProgress.Visibility = updates.Phase == UpdatePhase.Downloading ? Visibility.Visible : Visibility.Collapsed;
+        UpdateProgress.Value = updates.Progress;
+        if (updates.Phase == UpdatePhase.Downloading) UpdateState.Text += $" {updates.Progress:F0}%";
+        CheckUpdateButton.IsEnabled = !updates.Busy && updates.Phase != UpdatePhase.Ready;
+        DownloadUpdateButton.Visibility = !updates.Busy && updates.Release is not null && updates.Phase != UpdatePhase.Ready ? Visibility.Visible : Visibility.Collapsed;
+        InstallUpdateButton.Visibility = updates.Phase == UpdatePhase.Ready ? Visibility.Visible : Visibility.Collapsed;
+        CancelUpdateButton.Visibility = updates.Phase is UpdatePhase.Checking or UpdatePhase.Downloading ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnAutoUpdateChanged(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        _services.Settings.Current.CheckForUpdates = AutoUpdateCheck.IsChecked == true;
+        SaveSettings();
+    }
+    private async void OnCheckUpdate(object sender, RoutedEventArgs e)
+    {
+        var task = _services.Updates.CheckAsync();
+        UpdateUpdateStatus();
+        await task;
+        UpdateUpdateStatus();
+    }
+    private async void OnDownloadUpdate(object sender, RoutedEventArgs e)
+    {
+        var task = _services.Updates.DownloadAsync();
+        UpdateUpdateStatus();
+        await task;
+        UpdateUpdateStatus();
+    }
+    private async void OnInstallUpdate(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow window) await window.InstallUpdateAsync();
+        UpdateUpdateStatus();
+    }
+    private void OnCancelUpdate(object sender, RoutedEventArgs e) => _services.Updates.Cancel();
+    private void OnReleaseNotes(object sender, RoutedEventArgs e)
+    {
+        try { Process.Start(new ProcessStartInfo(global::Focus.Core.Updates.ReleaseClient.Repository + "/releases") { UseShellExecute = true }); }
+        catch (Exception ex) { MessageBox.Show(ex.Message, Loc.Inst["msg.error"]); }
     }
 }

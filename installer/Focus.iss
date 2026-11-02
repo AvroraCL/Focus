@@ -3,7 +3,7 @@
 ; Then compile:        iscc installer\Focus.iss
 
 #define MyAppName "Focus"
-#define MyAppVersion "0.0.2"
+#define MyAppVersion GetFileVersion("..\artifacts\publish\app\Focus.exe")
 #define MyAppPublisher "Focus"
 #define MyAppExeName "Focus.exe"
 
@@ -12,6 +12,7 @@ AppId={{6F0C2C31-5B8B-4F67-9E5B-6C2F1E7A1C11}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+LicenseFile=..\LICENSE
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes

@@ -14,16 +14,27 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Focus.Core\Focus.Core.csproj" />
     <ProjectReference Include="..\Focus.Telemetry\Focus.Telemetry.csproj" />
     <ProjectReference Include="..\Focus.Hud\Focus.Hud.csproj" />
     <ProjectReference Include="..\Focus.Overlay\Focus.Overlay.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Focus.Updater\Focus.Updater.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <Target Name="CopyOverlayBuildOutput" AfterTargets="Build">
     <ItemGroup>
-      <OverlayFiles Include="$(MSBuildThisFileDirectory)..\Focus.Overlay\bin\$(Configuration)\net10.0-windows\**\*.*" />
+      <OverlayFiles Include="$(MSBuildThisFileDirectory)..\Focus.Overlay\bin\$(Configuration)\net10.0-windows\$(RuntimeIdentifier)\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(OverlayFiles)" DestinationFolder="$(OutDir)overlay\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyUpdaterBuildOutput" AfterTargets="Build">
+    <ItemGroup>
+      <UpdaterFiles Include="$(MSBuildThisFileDirectory)..\Focus.Updater\bin\$(Configuration)\net10.0-windows\$(RuntimeIdentifier)\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(UpdaterFiles)" DestinationFolder="$(OutDir)updater\%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 </Project>

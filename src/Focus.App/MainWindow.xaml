@@ -3,12 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:loc="clr-namespace:Focus.App.Localization"
-        Title="Focus" Width="1240" Height="800" MinWidth="1080" MinHeight="680" WindowStartupLocation="CenterScreen"
+        Title="Focus" Width="1400" Height="900" MinWidth="1080" MinHeight="680" WindowStartupLocation="CenterScreen"
         FontFamily="{StaticResource Font.Base}" FontSize="13"
         WindowStyle="None" Background="{StaticResource Brush.Window}" SnapsToDevicePixels="True"
         TextOptions.TextFormattingMode="Ideal" UseLayoutRounding="True">
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="52" ResizeBorderThickness="6" GlassFrameThickness="0"
+        <shell:WindowChrome CaptionHeight="64" ResizeBorderThickness="6" GlassFrameThickness="0"
                             CornerRadius="0" UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
@@ -21,9 +21,9 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="7" Height="36" Margin="0,1">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="0" Height="48" Margin="0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
                             <Grid>
-                                <Border x:Name="Indicator" Width="3" Height="16" CornerRadius="2"
+                                <Border x:Name="Indicator" Width="3" Height="16" CornerRadius="0"
                                         Background="Transparent" HorizontalAlignment="Left" Margin="4,0,0,0" />
                                 <ContentPresenter Margin="16,0,10,0" VerticalAlignment="Center" />
                             </Grid>
@@ -36,7 +36,7 @@
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.AccentSoft}" />
                                 <Setter TargetName="Indicator" Property="Background" Value="{StaticResource Brush.Accent}" />
-                                <Setter Property="Foreground" Value="#C7DFFF" />
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Accent}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -46,7 +46,7 @@
 
         <Style x:Key="TitleBarButton" TargetType="Button">
             <Setter Property="Width" Value="44" />
-            <Setter Property="Height" Value="52" />
+            <Setter Property="Height" Value="64" />
             <Setter Property="FontFamily" Value="{StaticResource Font.Icons}" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
@@ -93,7 +93,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="216" />
+            <ColumnDefinition Width="188" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -101,18 +101,10 @@
         <Border Grid.Column="0" Background="{StaticResource Brush.Sidebar}"
                 BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Margin="18,18,18,18">
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="26" Height="26" CornerRadius="7" Background="{StaticResource Brush.Accent}">
-                            <TextBlock Text="F" Foreground="#08121F" FontWeight="Bold" FontSize="14"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="Focus" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding [app.tagline], Source={x:Static loc:Loc.Inst}}"
-                                       Style="{StaticResource Text.Muted}" FontSize="10.5" Margin="0,1,0,0" />
-                        </StackPanel>
-                    </StackPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="24,24,18,42">
+                    <TextBlock Text="Focus." FontSize="38" FontWeight="Bold" />
+                    <Border Width="32" Height="5" Background="{StaticResource Brush.Accent}" HorizontalAlignment="Left" Margin="0,12,0,16" />
+                    <TextBlock Text="PERFORMANCE&#x0a;OBSERVATORY" FontSize="10" LineHeight="15" Foreground="{StaticResource Brush.TextSecondary}" />
                 </StackPanel>
 
                 <Border DockPanel.Dock="Bottom" Padding="18,12,18,16">
@@ -130,16 +122,21 @@
                             <TextBlock x:Name="OverlayStatusText" Style="{StaticResource Text.Muted}"
                                        Margin="8,0,0,0" FontSize="11" />
                         </StackPanel>
+                        <Button Style="{StaticResource Btn.Ghost}" HorizontalContentAlignment="Left" Padding="0" Margin="0,4,0,8" Click="OnOpenCommands"
+                                Content="{Binding [command.entry], Source={x:Static loc:Loc.Inst}}" />
                         <TextBlock x:Name="VersionText" Style="{StaticResource Text.Muted}" FontSize="10.5" />
+                        <Button x:Name="UpdateNotice" Visibility="Collapsed" Style="{StaticResource Btn.Primary}" Margin="0,12,0,0"
+                                Content="{Binding [update.notice], Source={x:Static loc:Loc.Inst}}" Click="OnOpenUpdates" />
                     </StackPanel>
                 </Border>
 
                 <StackPanel Margin="10,0,10,0">
+                    <TextBlock Margin="14,0,0,10" Text="{Binding [shell.workspace], Source={x:Static loc:Loc.Inst}}" Style="{StaticResource Text.SectionLabel}" />
                     <RadioButton x:Name="NavDashboard" Style="{StaticResource NavItem}" GroupName="Nav" Tag="dashboard"
                                  Checked="OnNavChecked" IsChecked="True">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE80F;" FontFamily="{StaticResource Font.Icons}" FontSize="13"
-                                       VerticalAlignment="Center" Width="20" />
+                            <TextBlock Text="01" FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{StaticResource Brush.Accent}"
+                                       VerticalAlignment="Center" Width="30" />
                             <TextBlock Text="{Binding [nav.dashboard], Source={x:Static loc:Loc.Inst}}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -147,8 +144,8 @@
                     <RadioButton x:Name="NavEditor" Style="{StaticResource NavItem}" GroupName="Nav" Tag="editor"
                                  Checked="OnNavChecked">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE70F;" FontFamily="{StaticResource Font.Icons}" FontSize="13"
-                                       VerticalAlignment="Center" Width="20" />
+                            <TextBlock Text="02" FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{StaticResource Brush.Accent}"
+                                       VerticalAlignment="Center" Width="30" />
                             <TextBlock Text="{Binding [nav.editor], Source={x:Static loc:Loc.Inst}}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -156,8 +153,8 @@
                     <RadioButton x:Name="NavProfiles" Style="{StaticResource NavItem}" GroupName="Nav" Tag="profiles"
                                  Checked="OnNavChecked">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8A5;" FontFamily="{StaticResource Font.Icons}" FontSize="13"
-                                       VerticalAlignment="Center" Width="20" />
+                            <TextBlock Text="03" FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{StaticResource Brush.Accent}"
+                                       VerticalAlignment="Center" Width="30" />
                             <TextBlock Text="{Binding [nav.profiles], Source={x:Static loc:Loc.Inst}}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -165,8 +162,8 @@
                     <RadioButton x:Name="NavSessions" Style="{StaticResource NavItem}" GroupName="Nav" Tag="sessions"
                                  Checked="OnNavChecked">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE81C;" FontFamily="{StaticResource Font.Icons}" FontSize="13"
-                                       VerticalAlignment="Center" Width="20" />
+                            <TextBlock Text="04" FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{StaticResource Brush.Accent}"
+                                       VerticalAlignment="Center" Width="30" />
                             <TextBlock Text="{Binding [nav.sessions], Source={x:Static loc:Loc.Inst}}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -174,8 +171,8 @@
                     <RadioButton x:Name="NavSettings" Style="{StaticResource NavItem}" GroupName="Nav" Tag="settings"
                                  Checked="OnNavChecked">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE713;" FontFamily="{StaticResource Font.Icons}" FontSize="13"
-                                       VerticalAlignment="Center" Width="20" />
+                            <TextBlock Text="05" FontFamily="{StaticResource Font.Mono}" FontSize="11" Foreground="{StaticResource Brush.Accent}"
+                                       VerticalAlignment="Center" Width="30" />
                             <TextBlock Text="{Binding [nav.settings], Source={x:Static loc:Loc.Inst}}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -187,28 +184,28 @@
         <!-- content -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="52" />
+                <RowDefinition Height="64" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Background="{StaticResource Brush.Window}" BorderBrush="{StaticResource Brush.Border}"
                     BorderThickness="0,0,0,1">
                 <Grid>
-                    <StackPanel Margin="26,0,0,0" VerticalAlignment="Center">
-                        <TextBlock x:Name="PageTitle" FontSize="15" FontWeight="SemiBold" />
-                        <TextBlock x:Name="PageSubtitle" Style="{StaticResource Text.Muted}" FontSize="11"
-                                   Margin="0,1,0,0" />
+                    <StackPanel Margin="28,0,390,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="PageTitle" FontSize="17" FontWeight="Bold" />
+                        <TextBlock x:Name="PageSubtitle" Style="{StaticResource Text.Muted}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                   Margin="0,3,0,0" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Stretch">
-                        <Border x:Name="RecordingChip" Visibility="Collapsed" Background="#1E1416"
-                                BorderBrush="#40232A" BorderThickness="1" CornerRadius="6"
+                        <Border x:Name="RecordingChip" Visibility="Collapsed" Background="#FBE7E2"
+                                BorderBrush="#DB3024" BorderThickness="1" CornerRadius="0"
                                 Padding="9,4" Margin="0,0,10,0" VerticalAlignment="Center"
                                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
                             <StackPanel Orientation="Horizontal">
                                 <Ellipse Width="6" Height="6" Fill="{StaticResource Brush.Danger}" VerticalAlignment="Center" />
                                 <TextBlock x:Name="RecordingChipText" Style="{StaticResource Text.Numeric}"
-                                           FontSize="11" Margin="6,0,0,0" Foreground="#FFB4B4" />
+                                           FontSize="11" Margin="6,0,0,0" Foreground="#B62018" />
                             </StackPanel>
                         </Border>
 
@@ -231,12 +228,10 @@
             <ContentControl x:Name="PageHost" Grid.Row="1" />
 
             <Border x:Name="Toast" Grid.Row="1" Background="{StaticResource Brush.SurfaceRaised}"
-                    BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1" CornerRadius="8"
+                    BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1" CornerRadius="0"
                     Padding="14,10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,24"
                     Visibility="Collapsed" IsHitTestVisible="False">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.5" Color="Black" />
-                </Border.Effect>
+
                 <TextBlock x:Name="ToastText" FontSize="12.5" />
             </Border>
         </Grid>

@@ -1,176 +1,256 @@
-# Focus（焦点）
+<div align="center">
 
-> 开发分支已接入 Rust 统计与持久化核心，保留 WPF 界面。迁移边界、构建依赖与修复清单见 [Rust 迁移说明](docs/RUST-MIGRATION.md)。历史 v0.0.2 发布包不包含这些修改。
+<img src="src/Focus.App/Assets/focus-app-icon-v1.png" alt="Focus — Windows 游戏性能监控与 HUD 编辑器" width="140">
 
-> **See What Matters.** —— 只看重要的。
+# Focus · 焦点
 
-Focus 是一款为 Windows 打造的游戏性能监控工具。它把**真实**的帧数据、硬件数据和一块**完全由你设计**的 HUD 放到一起：想知道什么就看什么，想放在哪里就放在哪里，不想看的时候它安静地消失。
+[![Release](https://img.shields.io/github/v/release/AvroraCL/Focus?style=flat-square&logo=github)](https://github.com/AvroraCL/Focus/releases)
+[![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011%20x64-0078D4?style=flat-square)](https://github.com/AvroraCL/Focus)
+[![WPF](https://img.shields.io/badge/WPF-.NET%2010-512BD4?style=flat-square&logo=dotnet&logoColor=white)](src/Focus.App)
+[![Rust](https://img.shields.io/badge/Rust-2021%20edition-DEA584?style=flat-square&logo=rust&logoColor=white)](rust/focus-native)
+[![License](https://img.shields.io/badge/License-MIT-DB3024?style=flat-square)](LICENSE)
 
-它不做的事同样重要：不注入游戏、不挂钩渲染接口、不碰反作弊，也不会用估算值冒充实测值——拿不到的指标就诚实地显示为一个 `—`。
+**See What Matters. / 只看重要的。**
 
-![HUD 编辑器](docs/ui-editor.png)
+面向 Windows 玩家的游戏性能监控与可视化 HUD 工作台
+
+</div>
+
+Focus 将游戏帧数据、硬件传感器、可自由编排的 HUD 和测试会话放进一个桌面应用。选中游戏，挑一套预设，或自己设计布局；把需要的数字放到屏幕边缘，记录一局，再回来看帧时间和低帧表现。界面采用 WPF，统计与原子文件写入由 Rust 核心承担，采集数据和配置保存在本机。
+
+**[下载已发布的 Windows 版](https://github.com/AvroraCL/Focus/releases/latest)** · [查看 HUD 预设](#hud-预设) · [更新日志](CHANGELOG.md) · [反馈问题](https://github.com/AvroraCL/Focus/issues)
+
+> 本 README 展示 **v0.0.3 开发版**。当前 GitHub 已发布版本为 **v0.0.2**，尚不包含新版瑞士风格界面、Rust 核心、新增 HUD 和自动更新客户端；体验这些功能需要从当前源码构建。
+
+![Focus 瑞士风格概览页：尚未选择游戏，硬件指标正常显示](docs/images/focus-dashboard.png)
+
+从一局游戏到一份记录：**选择进程** → **应用或编辑 HUD** → **记录测试会话** → **查看帧时间、对比结果、导出 CSV**。上图为实际桌面界面；未选择游戏、未获得帧采集权限时，帧指标显示为 `—`。
+
+## 面向用户
+
+### Focus 能做什么
+
+- **帧率与帧时间**：通过 Windows ETW 的 Present 事件获取 FPS、平均 FPS、1% Low、0.1% Low 与帧时间历史，观察帧间隔波动。
+- **硬件与系统监测**：显示 GPU / CPU 使用率、温度、频率、功耗，以及显存、内存和进程内存；具体项目取决于硬件与驱动提供的传感器。
+- **可视化 HUD 编辑**：组合文本、进度条、曲线、指标列表、面板、分隔线和图标；支持拖动、多选、对齐、网格吸附、分组、撤销与重做。
+- **9 套内置预设**：从极简帧率到完整跑分面板，一键使用，也可以复制成自己的配置。字体、颜色、单位、透明度、条件变色和默认位置均可编辑。
+- **游戏配置关联**：导入 / 导出 JSON，为配置关联游戏可执行文件；检测到对应游戏时切换布局。
+- **独立覆盖层**：透明、鼠标穿透、不抢焦点，支持锚点、偏移和缩放；编辑器与覆盖层共用 HUD 渲染器。
+- **测试会话**：开始 / 停止录制，保存原始帧间隔，查看统计与卡顿尖峰、对比历史会话、导出 CSV。
+- **桌面交互**：系统托盘、全局快捷键、中英文界面、`Ctrl+K` 快捷操作、配置和会话搜索、专注画布模式。
+- **更新检查**：开发版支持启动时检查 GitHub 正式版，可取消下载、SHA-256 校验，以及退出后的文件替换与失败回滚。安装由用户点击执行。
+
+### 下载与版本
+
+| 版本 | 获取方式 | 说明 |
+| --- | --- | --- |
+| v0.0.2 · 已发布 | [Focus-v0.0.2-win-x64.zip](https://github.com/AvroraCL/Focus/releases/download/v0.0.2/Focus-v0.0.2-win-x64.zip) | 历史界面与功能；解压后运行，需要 .NET 10 Desktop Runtime |
+| v0.0.3 · 开发中 | [从源码构建](#从源码构建) | 本 README 展示的界面与功能；尚未发布安装包或新版 Release |
+
+v0.0.2 ZIP 的 SHA-256：
+
+```text
+e6b265fdb87465015b193e911c7f4f019dc3a0b8ae640156fa5e0083e7c93e5b
+```
+
+完整版本记录见 [Releases](https://github.com/AvroraCL/Focus/releases) 和 [CHANGELOG.md](CHANGELOG.md)。
+
+### 系统要求
+
+- Windows 10 22H2 或 Windows 11，**x64**。Windows 11 的完整兼容性仍待实测。
+- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)；自行构建的自包含包无需另外安装运行时。
+- ETW 帧采集需要管理员权限。普通权限可以打开界面并读取可用的硬件指标，界面会提示如何提权。
+- 建议使用游戏的**无边框窗口化**模式，让桌面覆盖层正常叠加。
+
+运行发布包不需要安装 Rust、编译器或开发工具。
+
+### 安装与使用
+
+1. 下载 ZIP，**完整解压**到一个目录，保留 `overlay/` 和其他随包文件，再启动 `Focus.exe`。
+2. 要监测游戏帧率时，点击概览页的“以管理员身份重启”。
+3. 启动游戏，在概览页选择对应进程，或等待自动识别。
+4. 打开“配置文件”，选择内置预设；也可以进入“HUD 编辑器”调整组件和位置。
+5. 显示 HUD。需要复盘时开始记录，结束后在“会话记录”中查看统计、曲线和导出结果。
+
+开发版的“使用预设”直接应用布局；“编辑”会创建可修改副本。关闭窗口默认收回托盘，完全退出请使用托盘菜单。
+
+### HUD 预设
+
+![六套新增 HUD：瑞士极简、竞技横条、硬件侧栏、温控面板、跑分分析和底部信息带，数值为示例数据](docs/images/hud-presets.png)
+
+上图使用示例数据展示布局，**不是游戏实测结果**。实际覆盖层只显示采集得到的指标。
+
+| 预设 | 适合查看 | 默认位置 |
+| --- | --- | --- |
+| 极简 | FPS 与帧时间 | 左上角 |
+| 经典 | 帧率、低帧和 GPU / CPU 负载 | 左上角 |
+| 专业分析 | 帧时间曲线与详细性能指标 | 左上角 |
+| 瑞士极简 | 纸白底、黑色帧率与红色焦点 | 左上角 |
+| 竞技横条 | FPS、双低帧指标与 30 秒趋势 | 顶部居中 |
+| 硬件侧栏 | 负载、温度、功耗、频率与内存 | 右上角 |
+| 温控面板 | GPU / CPU 温度、功耗与热点温度 | 右下角 |
+| 跑分分析 | 平均帧率、双低帧、曲线与会话时长 | 左下角 |
+| 底部信息带 | 44 px 高的轻量信息带 | 底部居中 |
+
+尺寸、提示阈值与导出方法见 [HUD 预设说明](docs/HUD-PRESETS.md)。
+
+<details>
+<summary>查看 HUD 编辑器</summary>
+
+![Focus HUD 编辑器：组件图层、实时画布和属性面板](docs/images/focus-editor.png)
+
+画布支持布局编辑、网格吸附、条件颜色和精确属性输入；专注画布模式可以暂时收起两侧面板。
+
+</details>
+
+### 快捷键
+
+| 快捷键 | 功能 | 范围 |
+| --- | --- | --- |
+| `Ctrl + Alt + H` | 显示 / 隐藏 HUD | 全局，可在设置中修改 |
+| `Ctrl + Alt + R` | 开始 / 停止记录 | 全局，可在设置中修改 |
+| `Ctrl + Alt + L` | 切换配置 | 全局，可在设置中修改 |
+| `Ctrl + K` | 打开快捷操作 | 主窗口 |
+| `Alt + 1` … `Alt + 5` | 切换五个页面 | 主窗口 |
+| `Ctrl + Shift + F` | 切换专注画布 | HUD 编辑器 |
+
+### 本地数据与更新
+
+```text
+%AppData%\Focus\
+├── settings.json          应用设置
+├── settings.backup.json   上一份有效设置备份
+├── profiles\              自定义 HUD（JSON）
+├── sessions\              测试会话（FSS1 压缩文件）
+├── logs\                  运行日志
+└── updates\               更新下载、安装任务与文件备份
+```
+
+设置页可打开数据目录或复制诊断信息。配置与会话在本地保存，原子文件替换降低写入中断造成的损坏风险。
+
+开发版默认在启动后检查更新，也可以关闭自动检查。下载成功并校验后，点击“重启并安装”；录制期间不能安装，安装前会保存待保存的编辑内容。更新来源、文件格式和回滚边界见 [自动更新说明](docs/AUTO-UPDATE.md)。
+
+### 当前状态与已知限制
+
+- **Present 事件不等于显示端实际呈现帧**。当前按进程聚合，尚未区分同一进程中的多个交换链。
+- 普通置顶窗口不能叠加到独占全屏画面；推荐无边框窗口化。具体游戏与反作弊软件的兼容性需逐项验证。
+- 指标缺失时显示 `—`；CPU 温度、功耗或某些 GPU 传感器可能因硬件、权限或驱动而不可用。
+- 实时低帧统计基于最近最多 60,000 个 Present；录制统计基于已保存会话。单次会话当前最多记录 8,000,000 个帧间隔。
+- 本次开发版已通过 62 项 .NET 测试、WPF 交互检查、预设渲染检查和本地更新流程验证；公网升级、正式安装包、长时间运行、Windows 11、多显示器 / 高 DPI 与更多真实游戏环境仍待验证。
+
+具体边界见 [兼容性说明](docs/COMPATIBILITY.md)、[Rust 迁移说明](docs/RUST-MIGRATION.md) 和 [开发进度](PROGRESS.md)。
 
 ---
 
-## 为什么会做这个
+## 面向开发者
 
-市面上的监控工具通常有两个极端：要么信息堆得很满，要么只能看几个固定数字。
+### 设计原则与技术栈
 
-Focus 想解决的问题很朴素：**一局游戏里真正影响体验的，往往只有三五个数字**。1% Low 突然掉下去的那一刻、显存悄悄贴到上限、显卡温度开始爬升——这些才值得被看见。其余的，可以放，也可以不放。
+**数据保持真实，界面负责表达，核心逻辑只有一份实现。**
 
-所以 Focus 把"显示什么"和"怎么显示"完全交给你：用一个可视化编辑器画 HUD，实时预览，然后让它在游戏里以透明、鼠标穿透、不抢焦点的方式安静地浮在最上层。
+- **WPF / .NET 10**：桌面界面、编辑器、系统托盘、快捷键与 Windows 集成。
+- **Rust / C ABI**：帧时间线、环形缓存、统计计算与原子写入；C# 通过 SafeHandle 管理核心对象。
+- **ETW / TraceEvent**：消费游戏进程的 Present 事件。
+- **LibreHardwareMonitor**：读取硬件传感器，由托管适配层提供给指标系统。
+- **独立 Overlay 进程**：通过共享内存接收快照；编辑器与覆盖层共用 `Focus.Hud` 渲染器。
+- **独立 Updater 进程**：校验、准备更新、等待主程序退出、备份与替换文件。
 
-## 它能做什么
+原始帧间隔用于统计，图表历史单独采样。采集、统计、HUD 和 UI 的职责边界见 [架构决策](docs/DECISIONS.md)。
 
-**真实的游戏帧数据**
+### 开发环境
 
-| 指标 | 说明 |
-| --- | --- |
-| FPS / 平均 FPS | 来自 ETW 的真实 Present 事件，不是采样猜测 |
-| 1% Low / 0.1% Low | 最慢 1% / 0.1% 帧的平均帧率，与 RTSS、CapFrameX 口径一致 |
-| 帧时间与曲线 | 相邻两帧的时间差，以及最近一段时间的实时曲线 |
-| 测试会话 | 开始/停止记录，结束后统计、对比历史会话、导出 CSV |
+- Windows x64、Git、**.NET 10 SDK**。
+- **PowerShell 7**，确保 `pwsh` 在 PATH 中。
+- **Rust 工具链**（最低 Rust 1.82），安装 `x86_64-pc-windows-gnu` target。
+- 可用于 Windows x64 的 **MinGW-w64 / GNU 链接工具链**，并配置到 PATH。当前构建脚本固定使用 GNU target。
+- 可选：Inno Setup 6，用于编译安装程序；安装流程尚未完成本次验证。
 
-**硬件与系统**
-
-- GPU：使用率、温度、热点温度、核心/显存频率、功耗、显存占用、风扇转速
-- CPU：总体与每个核心的使用率、温度、频率、功耗
-- 内存：系统占用、受监控进程的内存占用
-
-数据来自 LibreHardwareMonitor；传感器不存在时显示不可用，不会伪造。
-
-**可以画出来的 HUD**
-
-- 组件：文本、进度条、实时曲线、指标列表、面板、分隔线、图标
-- 布局：拖动、缩放、网格、吸附与参考线、多选、对齐、分布、组合、层级、撤销/重做
-- 样式：字体字号字重、颜色、透明度、背景、圆角、边框、内边距、数值格式与单位
-- 条件颜色：例如 GPU 高于 80°C 时自动变红
-- 编辑器的画布与游戏内覆盖层使用同一套渲染代码，所见即所得
-
-![实时 HUD](docs/hud-live.png)
-
-**配置与覆盖层**
-
-- 三个内置预设（极简 / 经典 / 专业分析），可以随时复制成自己的配置
-- 配置导入导出、与游戏可执行文件关联，检测到游戏时自动切换
-- 自动保存 + 原子写入，异常退出也能恢复
-- 覆盖层独立进程渲染：透明背景、鼠标穿透、`WS_EX_NOACTIVATE` 不抢焦点、支持多显示器与高 DPI
-
-## 快速开始
-
-**要求**
-
-- Windows 10 22H2 / Windows 11，x64
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download)（或使用自包含发布包）
-- **管理员权限**用于 ETW 帧采集；不提权也能用，只是帧指标不可用（界面会明确提示）
-
-**使用**
-
-1. 启动 Focus，按照横幅提示以管理员身份重启。
-2. 在「概览」里选择要监控的游戏，或者让 Focus 自动识别正在呈现画面的前台程序。
-3. 在「HUD 编辑器」里设计布局，右侧属性面板可以精确到一个小数位。
-4. 把配置关联到游戏，下次启动游戏时会自动加载。
-5. 想认真测一局时，开始一次「测试会话」，结束后在「会话记录」里回顾曲线、对比历史、导出 CSV。
-
-**默认快捷键**（可在设置中重新录制）
-
-| 快捷键 | 功能 |
-| --- | --- |
-| `Ctrl + Alt + H` | 显示 / 隐藏 HUD |
-| `Ctrl + Alt + R` | 开始 / 停止会话记录 |
-| `Ctrl + Alt + L` | 切换配置文件 |
-
-## 数据放在哪里
-
-```
-%AppData%\Focus\
-├── settings.json     应用设置（保留上一份备份）
-├── profiles\         你创建的 HUD 配置（*.json）
-├── sessions\         测试会话（*.fss，压缩二进制，只存实测帧时间）
-└── logs\             运行日志
-```
-
-删除这个目录即可完全重置；不会写入注册表（除 Windows 常规的窗口位置等系统行为外）。
-
-## 关于兼容性，需要说清楚的
-
-- **推荐无边框窗口化**。独占全屏（Exclusive Fullscreen）由游戏独占显示输出，普通置顶窗口无法叠加，此时 HUD 不显示——但帧采集仍然有效。
-- 不注入、不挂钩、不规避反作弊。个别游戏的反作弊可能限制任何覆盖层或 ETW 工具，这种情况下请不要在该游戏中使用。
-- 无法获取的指标显示为 `—`，不使用估算值。
-- Windows 10 22H2 上已完成实机验证；Windows 11、多显示器与高 DPI、真实游戏内的叠加行为仍待更多测试。
-
-更完整的兼容性说明见 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
-
-## 它是怎么做的
-
-```
-Telemetry   ETW（DxgKrnl Present 事件）+ LibreHardwareMonitor + 系统指标
-Metrics     帧时间线、统计口径、历史缓存
-Hud         组件模型、渲染内核（编辑器与覆盖层共用）
-Overlay     独立进程：透明、穿透、不抢焦点、按显示器 DPI 定位
-Editor      画布、属性面板、撤销重做、实时预览
-Profiles    配置、预设、游戏关联、导入导出
-App         主程序、托盘、快捷键、会话与设置
-```
-
-主程序与覆盖层是两个进程，通过共享内存传递状态快照。覆盖层崩溃不会拖垮主程序，主程序繁忙也不会卡住 HUD。
-
-架构决策与取舍记录在 [docs/DECISIONS.md](docs/DECISIONS.md)，开发进度与已知问题在 [PROGRESS.md](PROGRESS.md)。
-
-## 从源码构建
-
-```bash
-git clone https://github.com/AvroraCL/Focus.git
-cd Focus
-dotnet build src/Focus.App/Focus.App.csproj -c Release
-```
-
-运行：
-
-```bash
-dotnet run --project src/Focus.App
-```
-
-打包发布（主程序 + 覆盖层 + zip）：
+### 从源码构建
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File build.ps1
-# 自包含版本（目标机器无需安装 .NET 运行时）
-powershell -ExecutionPolicy Bypass -File build.ps1 -SelfContained
+git clone https://github.com/AvroraCL/Focus.git
+cd Focus
+rustup target add x86_64-pc-windows-gnu
+dotnet build Focus.slnx -c Release
+dotnet run --project src/Focus.App/Focus.App.csproj -c Release
 ```
 
-产物位于 `artifacts/publish/app`，压缩包为 `artifacts/publish/Focus-v0.0.2-win-x64.zip`。
+MSBuild 会调用 `build-native.ps1`，生成并复制 `focus_native.dll`。GNU 链接器的中间产物放在临时目录的 ASCII 路径下，以兼容中文仓库路径。不要把其他架构的 DLL 混入 x64 输出。
 
-运行单元测试：
+如果 PATH 指向没有 SDK 的 x86 `dotnet`，请使用 `C:\Program Files\dotnet\dotnet.exe`。
 
-```bash
-dotnet test tests/Focus.Tests/Focus.Tests.csproj
+### 构建与打包
+
+```powershell
+# 框架依赖版：目标机器需要 .NET 10 Desktop Runtime
+pwsh -File build.ps1
+
+# 自包含版：随包携带运行时
+pwsh -File build.ps1 -SelfContained
+
+# 可选安装程序（先完成上面的发布）
+iscc installer/Focus.iss
 ```
 
-## 当前版本：v0.0.2
+`build.ps1` 发布主程序、覆盖层与更新程序，输出到 `artifacts/publish/`：
 
-这是第一个可以实际使用的版本，已经做到：
+```text
+artifacts/publish/
+├── app/                             可运行目录，包含 overlay/ 与 updater/
+├── Focus-v0.0.3-win-x64.zip           分发包
+└── Focus-v0.0.3-win-x64.zip.sha256    SHA-256 校验文件
+```
 
-- 管理员权限下的真实 FPS / 帧时间 / 1% Low 采集与实机验证
-- 独立覆盖层在桌面上实时渲染真实数值
-- 完整的可视化编辑器与配置、会话、预设、双语界面
-- 26 项单元测试覆盖统计口径、会话文件、配置序列化、条件颜色与进程间通信
+发布时将 ZIP 和校验文件一起上传到对应 GitHub Release。版本维护在 `Directory.Build.props` 和 `rust/focus-native/Cargo.toml`；安装器从应用产物读取版本。许可证与第三方说明随应用目录和 ZIP 一起分发。
 
-还需要更多真实环境验证的内容（见 [PROGRESS.md](PROGRESS.md)）：真实游戏内的叠加行为、独占全屏、多显示器 / 高 DPI、长时间运行稳定性、安装包。
+### 测试与预览
 
-版本之间的改动记录在 [CHANGELOG.md](CHANGELOG.md)。
+```powershell
+dotnet test tests/Focus.Tests/Focus.Tests.csproj -c Release
+pwsh -File build-native.ps1 -Test
+pwsh -File build-native.ps1 -Lint
 
-## 第三方
+# WPF 快捷操作与编辑器交互检查
+dotnet run --project docs/tools/UiCheck/UiCheck.csproj -c Release -- artifacts/ui-preview
 
-- [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)（MPL-2.0）—— 硬件传感器
-- [Microsoft.Diagnostics.Tracing.TraceEvent](https://github.com/microsoft/perfview)（MIT）—— ETW 消费
+# 预设边界、文字尺寸、空数据渲染及 PNG / JSON 导出
+dotnet run --project docs/tools/PresetPreview/PresetPreview.csproj -c Release -- artifacts/hud-presets
 
-Focus 不包含任何来自 PresentMon、RTSS 或 CapFrameX 的代码，帧数据直接来自 Windows 的 ETW 事件。
+# 隔离目录中的更新程序端到端验证
+dotnet run --project docs/tools/UpdateCheck/UpdateCheck.csproj -c Release -- src/Focus.Updater/bin/Release/net10.0-windows artifacts/update-check
+```
+
+HUD 展示图使用专门的示例数据源，游戏内覆盖层不使用该数据源。运行截图工具时可设置 `FOCUS_DATA_ROOT` 隔离数据，设置 `FOCUS_INSTANCE` 隔离进程间通信；详见 [UI 设计与验证](docs/UI-REDESIGN.md)。
+
+### 目录结构
+
+```text
+rust/focus-native/       Rust 时间线、统计、原子写入与 C ABI
+src/Focus.Core/         数据模型、序列化、Rust 适配、IPC 与更新协议
+src/Focus.Telemetry/    ETW、硬件采集、游戏检测与会话录制
+src/Focus.Hud/          HUD 渲染器、数值格式与内置预设
+src/Focus.App/          WPF 主窗口、编辑器、设置、托盘与交互
+src/Focus.Overlay/      独立透明覆盖层
+src/Focus.Updater/      独立更新程序
+tests/Focus.Tests/     核心与集成回归测试
+docs/                  设计、兼容性、更新协议、截图与验证工具
+installer/             Inno Setup 安装脚本
+```
+
+### 参与开发
+
+欢迎通过 [Issues](https://github.com/AvroraCL/Focus/issues) 提交问题与建议。反馈采集问题时，请附上 Windows 版本、游戏显示模式、权限状态、复现步骤，以及设置页复制出的诊断信息；分享前可自行删去路径或进程名等私人信息。
+
+提交改动时请保持 Rust 统计核心、采集适配和 WPF 界面的职责边界，并运行与改动相关的检查。不要用示例数据填补实际采集缺失，也不要把未验证的平台兼容性描述为已经通过。
+
+## 第三方与致谢
+
+- [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)：硬件传感器，MPL-2.0。
+- [Microsoft.Diagnostics.Tracing.TraceEvent](https://github.com/microsoft/perfview)：ETW 事件消费，MIT。
+- [.NET / WPF](https://github.com/dotnet/wpf) 与 [Rust](https://www.rust-lang.org/)：桌面与核心运行基础。
+
+其他依赖及原作者说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 许可证
 
-本项目目前未附带开源许可证。如果你希望复用其中的代码，请先联系作者。
-
----
-
-如果 Focus 帮到了你，欢迎提 issue 或者点一个 star；如果它哪里做得不好，也请直接说。
+Focus 原创代码采用 [MIT License](LICENSE)，Copyright © 2026 AvroraCL。允许使用、修改和分发；再分发时保留版权与许可声明。第三方组件继续遵循各自许可证。

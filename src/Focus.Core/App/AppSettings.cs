@@ -20,6 +20,7 @@ public sealed class AppSettings
     public int UiRefreshHz { get; set; } = 12;
 
     public bool RecordAutomatically { get; set; }
+    public bool CheckForUpdates { get; set; } = true;
     public string? LastTargetExecutable { get; set; }
 
     public bool OnboardingCompleted { get; set; }

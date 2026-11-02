@@ -26,6 +26,7 @@ public partial class SessionsPage : UserControl
 
     private void OnSessionsChanged()
     {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(OnSessionsChanged)); return; }
         if (IsLoaded) Rebuild();
     }
 
@@ -36,39 +37,26 @@ public partial class SessionsPage : UserControl
 
     private sealed record SessionItem(string Id, string Name, string Subtitle, string Summary);
 
+    private void OnSearchChanged(object sender, TextChangedEventArgs e)
+    {
+        if (SessionList is not null && EmptyState is not null) Rebuild();
+    }
+
     private void Rebuild()
     {
+        string? previous = _selectedId;
+        string query = SessionSearch.Text.Trim();
         var items = _services.Sessions.Summaries.Select(s => new SessionItem(
-            s.Id,
-            s.Name,
+            s.Id, s.Name,
             $"{s.StartedAt.LocalDateTime:yyyy-MM-dd HH:mm} · {s.ProcessName ?? "—"}",
             $"{s.Stats.AverageFps:F0} FPS · {s.Stats.OnePercentLow:F0} 1% · {FormatDuration(s.Stats.DurationSeconds)}"))
-            .ToList();
-
+            .Where(s => (s.Name + " " + s.Subtitle).Contains(query, StringComparison.CurrentCultureIgnoreCase)).ToList();
         SessionList.ItemsSource = items;
         CountText.Text = items.Count.ToString();
-        if (items.Count > 0 && SessionList.SelectedItem is null) SessionList.SelectedIndex = 0;
-
-        if (_selectedId is not null)
-        {
-            var match = items.FirstOrDefault(i => i.Id == _selectedId);
-            if (match is not null)
-            {
-                SessionList.SelectedItem = match;
-                return;
-            }
-        }
-
-        if (items.Count == 0)
-        {
-            DetailPanel.Visibility = Visibility.Collapsed;
-            EmptyState.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            EmptyState.Visibility = Visibility.Collapsed;
-            DetailPanel.Visibility = Visibility.Visible;
-        }
+        SearchEmptyState.Visibility = items.Count == 0 && query.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyState.Visibility = items.Count == 0 && query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        DetailPanel.Visibility = Visibility.Collapsed;
+        if (items.Count > 0) SessionList.SelectedItem = items.FirstOrDefault(i => i.Id == previous) ?? items[0];
     }
 
     private void OnSessionSelected(object sender, SelectionChangedEventArgs e)

@@ -12,8 +12,8 @@ public sealed class FrameTimeChart : FrameworkElement
     public double[] Values { get; set; } = Array.Empty<double>();
     public double MedianMs { get; set; }
     public double StutterThresholdMs { get; set; }
-    public Color LineColor { get; set; } = Color.FromRgb(0x4C, 0x9A, 0xFF);
-    public Color SpikeColor { get; set; } = Color.FromRgb(0xFF, 0x6B, 0x6B);
+    public Color LineColor { get; set; } = Color.FromRgb(0x18, 0x18, 0x18);
+    public Color SpikeColor { get; set; } = Color.FromRgb(0xDB, 0x30, 0x24);
 
     public void SetData(double[] values, double medianMs, double thresholdMs)
     {
@@ -28,9 +28,9 @@ public sealed class FrameTimeChart : FrameworkElement
         double w = ActualWidth, h = ActualHeight;
         if (w <= 20 || h <= 20) return;
 
-        var fg = new SolidColorBrush(Color.FromRgb(0x68, 0x71, 0x7E));
+        var fg = new SolidColorBrush(Color.FromRgb(0x51, 0x51, 0x4C));
         fg.Freeze();
-        var gridPen = new Pen(new SolidColorBrush(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)), 1);
+        var gridPen = new Pen(new SolidColorBrush(Color.FromRgb(0xCB, 0xCA, 0xC4)), 1);
         gridPen.Freeze();
 
         if (Values.Length < 2)

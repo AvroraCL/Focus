@@ -6,9 +6,9 @@
              Background="Transparent">
     <UserControl.Resources>
         <Style x:Key="Tile" TargetType="Border">
-            <Setter Property="Background" Value="#0F1318" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="12,10" /><Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" /><Setter Property="BorderThickness" Value="1,0,0,0" />
         </Style>
         <Style x:Key="TileLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="11" />
@@ -16,7 +16,7 @@
         </Style>
         <Style x:Key="TileValue" TargetType="TextBlock">
             <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontSize" Value="24" />
             <Setter Property="Foreground" Value="{StaticResource Brush.Text}" />
         </Style>
         <Style x:Key="DetailLabel" TargetType="TextBlock">
@@ -31,10 +31,15 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
-        <StackPanel Margin="28,18,22,28" MaxWidth="1240" HorizontalAlignment="Stretch">
+        <StackPanel Margin="28,26,22,28" MaxWidth="1240" HorizontalAlignment="Stretch">
 
-            <Border x:Name="AdminBanner" Visibility="Collapsed" Background="#1D1710" BorderBrush="#3D2C18"
-                    BorderThickness="1" CornerRadius="10" Padding="16,12" Margin="0,0,0,16">
+            <StackPanel Margin="0,0,0,28">
+                <TextBlock Text="01 / LIVE PERFORMANCE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,12" />
+                <TextBlock Text="{Binding [dashboard.workspaceTitle], Source={x:Static loc:Loc.Inst}}" Style="{StaticResource Text.Heading}" />
+                <TextBlock Text="{Binding [dashboard.workspaceHint], Source={x:Static loc:Loc.Inst}}" Style="{StaticResource Text.Caption}" Margin="0,7,0,0" />
+            </StackPanel>
+            <Border x:Name="AdminBanner" Visibility="Collapsed" Background="#F0E9DA" BorderBrush="#D8CBB4"
+                    BorderThickness="1" CornerRadius="0" Padding="16,12" Margin="0,0,0,16">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -55,7 +60,7 @@
                 </Grid>
             </Border>
 
-            <Border Style="{StaticResource Card}" Padding="24,20,24,18">
+            <Border Style="{StaticResource Card}" Padding="0,20,0,20">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -80,8 +85,8 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                            <TextBlock x:Name="FpsText" Text="—" FontFamily="{StaticResource Font.Mono}"
-                                       FontSize="62" FontWeight="Bold" Foreground="{StaticResource Brush.TextMuted}"
+                            <TextBlock x:Name="FpsText" Text="—" FontFamily="{StaticResource Font.Base}"
+                                       FontSize="88" FontWeight="Bold" Foreground="{StaticResource Brush.TextMuted}"
                                        VerticalAlignment="Bottom" />
                             <TextBlock Text="FPS" Margin="10,0,0,12" FontSize="13"
                                        Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Bottom" />
@@ -96,10 +101,10 @@
                                        VerticalAlignment="Center" />
                         </StackPanel>
 
-                        <ui:Sparkline x:Name="FrameSpark" Height="66" Margin="0,10,0,0" StrokeColor="#4C9AFF" />
+                        <ui:Sparkline x:Name="FrameSpark" Height="66" Margin="0,10,0,0" StrokeColor="#DB3024" />
                     </StackPanel>
 
-                    <UniformGrid Grid.Column="1" Columns="2" Rows="2" Width="392" Margin="28,0,0,0"
+                    <UniformGrid Grid.Column="1" Columns="2" Rows="2" Width="280" Margin="32,0,0,0"
                                  VerticalAlignment="Center">
                         <Border Style="{StaticResource Tile}" Margin="0,0,8,8">
                             <StackPanel>
@@ -217,7 +222,7 @@
                             <TextBlock Text="%" Foreground="{StaticResource Brush.TextSecondary}" FontSize="13"
                                        Margin="4,0,0,6" VerticalAlignment="Bottom" />
                         </StackPanel>
-                        <ui:MetricBar x:Name="GpuUsageBar" Height="5" Margin="0,6,0,0" FillColor="#5FD3A0" />
+                        <ui:MetricBar x:Name="GpuUsageBar" Height="5" Margin="0,6,0,0" FillColor="#181818" />
                         <UniformGrid Columns="2" Margin="0,12,0,0">
                             <StackPanel Margin="0,0,0,7">
                                 <TextBlock Style="{StaticResource DetailLabel}"
@@ -240,7 +245,7 @@
                                 <TextBlock x:Name="VramText" Style="{StaticResource DetailValue}" Text="—" />
                             </StackPanel>
                         </UniformGrid>
-                        <ui:Sparkline x:Name="GpuSpark" Height="34" Margin="0,10,0,0" StrokeColor="#5FD3A0" />
+                        <ui:Sparkline x:Name="GpuSpark" Height="34" Margin="0,10,0,0" StrokeColor="#181818" />
                     </StackPanel>
                 </Border>
 
@@ -318,7 +323,7 @@
                                 <TextBlock x:Name="ProcessMemText" Style="{StaticResource DetailValue}" Text="—" />
                             </StackPanel>
                         </UniformGrid>
-                        <ui:Sparkline x:Name="RamSpark" Height="34" Margin="0,10,0,0" StrokeColor="#B48CFF" />
+                        <ui:Sparkline x:Name="RamSpark" Height="34" Margin="0,10,0,0" StrokeColor="#686862" />
                     </StackPanel>
                 </Border>
             </Grid>

@@ -113,7 +113,7 @@ public static class HudRenderer
         }
 
         string color = HudConditions.Resolve(element, ColorTarget.Foreground, data, element.Color);
-        double alpha = dimUnavailable && value is null ? 0.45 : 1.0;
+        double alpha = dimUnavailable && element.Metric != MetricId.None && value is null ? 0.45 : 1.0;
         var brush = HudPainting.Brush(color, alpha);
         string family = element.Kind == HudElementKind.Icon ? element.GlyphFontFamily : element.FontFamily;
 

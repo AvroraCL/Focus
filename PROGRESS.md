@@ -139,3 +139,11 @@ $env:FOCUS_INSTANCE="dev"; .\src\Focus.App\bin\Debug\net10.0-windows\Focus.exe -
 ## Rust 核心迁移（开发版，2026-11-03）
 
 已迁移帧时间线、实时与会话统计、原子文件写入；修复并发、缺失指标和保存问题。完整清单与尚未验证项目见 [docs/RUST-MIGRATION.md](docs/RUST-MIGRATION.md)。历史实测记录不构成本次迁移的实测结论。
+
+## UI 与交互重建第一阶段（2026-11-03）
+
+Rust 提交 `f29e385` 已推送。工作区已实现新配色与导航、快捷操作面板、可调整编辑器侧栏、专注画布、配置/会话搜索与保存状态反馈。阶段边界和验证命令见 [docs/UI-REDESIGN.md](docs/UI-REDESIGN.md)。
+
+## 瑞士国际主义 UI 与自动更新（2026-11-03）
+
+按反馈改为纸白、黑线、红色重点和编号导航，重排五个页面；增加 GitHub 正式版检测、可取消下载、SHA-256 校验、独立更新进程与失败回滚。已验证 WPF 实际渲染及本地更新端到端流程，v0.0.3 已打包但未发布。发布协议与网络测试边界见 [docs/AUTO-UPDATE.md](docs/AUTO-UPDATE.md)。

@@ -8,6 +8,9 @@ public static class DataPaths
 
     private static string BuildRoot()
     {
+        // Keep UI previews and automated checks independent of the user's saved workspace.
+        string? overrideRoot = Environment.GetEnvironmentVariable("FOCUS_DATA_ROOT");
+        if (!string.IsNullOrWhiteSpace(overrideRoot)) return Path.GetFullPath(overrideRoot);
         string folder = "Focus";
         if (Core.FocusInstance.Suffix != "v1") folder += "-" + Core.FocusInstance.Suffix;
         return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), folder);

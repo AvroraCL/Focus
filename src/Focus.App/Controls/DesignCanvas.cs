@@ -174,14 +174,6 @@ public sealed class DesignCanvas : FrameworkElement
         double ch = Profile.CanvasHeight * _zoom;
         var canvasRect = new Rect(origin.X, origin.Y, cw, ch);
 
-        // soft drop shadow
-        for (int i = 3; i >= 1; i--)
-        {
-            var shadow = new SolidColorBrush(Color.FromArgb((byte)(8 * i), 0, 0, 0));
-            shadow.Freeze();
-            dc.DrawRoundedRectangle(shadow, null, new Rect(canvasRect.X - i * 2, canvasRect.Y + i, cw + i * 4, ch + i * 2), 3, 3);
-        }
-
         DrawCheckerboard(dc, canvasRect);
 
         if (GridEnabled)
@@ -205,8 +197,8 @@ public sealed class DesignCanvas : FrameworkElement
         DrawGuides(dc, origin);
         if (_mode == DragMode.Marquee)
         {
-            var fill = new SolidColorBrush(Color.FromArgb(0x22, 0x4C, 0x9A, 0xFF));
-            var edge = new SolidColorBrush(Color.FromArgb(0xCC, 0x4C, 0x9A, 0xFF));
+            var fill = new SolidColorBrush(Color.FromArgb(0x22, 0xDB, 0x30, 0x24));
+            var edge = new SolidColorBrush(Color.FromArgb(0xCC, 0xDB, 0x30, 0x24));
             fill.Freeze();
             edge.Freeze();
             dc.DrawRectangle(fill, new Pen(edge, 1) { DashStyle = DashStyles.Dash }, _marquee);
@@ -266,11 +258,11 @@ public sealed class DesignCanvas : FrameworkElement
     {
         if (Profile is null || _selected.Count == 0) return;
 
-        var accent = new SolidColorBrush(Color.FromRgb(0x4C, 0x9A, 0xFF));
+        var accent = new SolidColorBrush(Color.FromRgb(0xDB, 0x30, 0x24));
         accent.Freeze();
         var pen = new Pen(accent, 1.2);
         pen.Freeze();
-        var soft = new Pen(new SolidColorBrush(Color.FromArgb(0x66, 0x4C, 0x9A, 0xFF)), 1);
+        var soft = new Pen(new SolidColorBrush(Color.FromArgb(0x66, 0xDB, 0x30, 0x24)), 1);
         soft.Freeze();
 
         foreach (var id in _selected)
@@ -305,7 +297,7 @@ public sealed class DesignCanvas : FrameworkElement
     private void DrawGuides(DrawingContext dc, Point origin)
     {
         if (_guides.Count == 0) return;
-        var brush = new SolidColorBrush(Color.FromArgb(0xDD, 0xFF, 0x59, 0x8A));
+        var brush = new SolidColorBrush(Color.FromArgb(0xDD, 0xDB, 0x30, 0x24));
         brush.Freeze();
         var pen = new Pen(brush, 1);
         pen.Freeze();

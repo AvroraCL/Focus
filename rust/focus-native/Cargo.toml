@@ -3,6 +3,8 @@ name = "focus-native"
 version = "0.0.3"
 edition = "2021"
 rust-version = "1.82"
+license = "MIT"
+repository = "https://github.com/AvroraCL/Focus"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

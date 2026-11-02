@@ -23,21 +23,21 @@ public sealed class CoreUsageStrip : FrameworkElement
 
         double gap = 3;
         double barWidth = Math.Max(2, (ActualWidth - gap * (values.Length - 1)) / values.Length);
-        var track = new SolidColorBrush(Color.FromArgb(0x26, 0xFF, 0xFF, 0xFF));
+        var track = new SolidColorBrush(Color.FromRgb(0xDE, 0xDD, 0xD6));
         track.Freeze();
-        var fill = new SolidColorBrush(Color.FromRgb(0x4C, 0x9A, 0xFF));
+        var fill = new SolidColorBrush(Color.FromRgb(0x18, 0x18, 0x18));
         fill.Freeze();
-        var hot = new SolidColorBrush(Color.FromRgb(0xF0, 0xB4, 0x5E));
+        var hot = new SolidColorBrush(Color.FromRgb(0xDB, 0x30, 0x24));
         hot.Freeze();
 
         for (int i = 0; i < values.Length; i++)
         {
             double x = i * (barWidth + gap);
-            dc.DrawRoundedRectangle(track, null, new Rect(x, 0, barWidth, ActualHeight), 2, 2);
+            dc.DrawRectangle(track, null, new Rect(x, 0, barWidth, ActualHeight));
             double ratio = Math.Clamp(values[i] / 100.0, 0, 1);
             if (ratio <= 0.001) continue;
             double h = Math.Max(2, ActualHeight * ratio);
-            dc.DrawRoundedRectangle(ratio > 0.9 ? hot : fill, null, new Rect(x, ActualHeight - h, barWidth, h), 2, 2);
+            dc.DrawRectangle(ratio > 0.9 ? hot : fill, null, new Rect(x, ActualHeight - h, barWidth, h));
         }
     }
 }

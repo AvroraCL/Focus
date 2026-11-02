@@ -8,6 +8,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Focus.App.Localization;
+using Focus.App.Dialogs;
 using Focus.App.Services;
 using Focus.App.Views;
 using Focus.Core.Metrics;
@@ -38,6 +39,7 @@ public partial class MainWindow : Window
         _initialPage = initialPage;
         InitializeComponent();
         RestoreWindowPlacement();
+        PreviewKeyDown += OnWorkspaceKeyDown;
 
         VersionText.Text = "Focus " + (Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.1.0");
 
@@ -67,6 +69,43 @@ public partial class MainWindow : Window
         _services.OverlayVisibilityChanged += UpdateChrome;
         _services.ActiveProfileChanged += UpdateChrome;
         Loc.Inst.LanguageChanged += OnLanguageChanged;
+        _services.Updates.Changed += UpdateNotification;
+        Loaded += async (_, _) =>
+        {
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FOCUS_DATA_ROOT"))) return;
+            await System.Threading.Tasks.Task.Delay(5000);
+            if (IsLoaded && _services.Settings.Current.CheckForUpdates) await _services.Updates.CheckAsync();
+        };
+    }
+
+    private void UpdateNotification()
+    {
+        UpdateNotice.Visibility = _services.Updates.Phase is UpdatePhase.Available or UpdatePhase.Ready ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnOpenUpdates(object sender, RoutedEventArgs e) => GoTo("settings");
+
+    public async System.Threading.Tasks.Task InstallUpdateAsync()
+    {
+        if (_services.IsRecording)
+        {
+            MessageBox.Show(this, Loc.Inst["update.stopRecording"], "Focus");
+            return;
+        }
+        IsEnabled = false;
+        try
+        {
+            _editor?.FlushPendingSave();
+            SaveWindowPlacement();
+            if (_services.Settings.LastSaveError is not null) throw new System.IO.IOException(_services.Settings.LastSaveError);
+            if (await _services.Updates.PrepareInstallAsync())
+            {
+                _forceClose = true;
+                Application.Current.Shutdown();
+            }
+        }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, Loc.Inst["msg.error"]); }
+        finally { IsEnabled = true; }
     }
 
     // ------------------------------------------------------------- navigation
@@ -154,14 +193,50 @@ public partial class MainWindow : Window
             "settings" => NavSettings,
             _ => NavDashboard,
         };
-        button.IsChecked = true;
-        Navigate(key);
+        if (button.IsChecked == true) Navigate(key);
+        else button.IsChecked = true;
+    }
+
+    private void OnOpenCommands(object sender, RoutedEventArgs e) => OpenCommands();
+
+    private void OnWorkspaceKeyDown(object sender, KeyEventArgs e)
+    {
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.K)
+        {
+            OpenCommands(); e.Handled = true;
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Alt)
+        {
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (key >= Key.D1 && key <= Key.D5)
+            {
+                GoTo(new[] { "dashboard", "editor", "profiles", "sessions", "settings" }[(int)key - (int)Key.D1]);
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void OpenCommands()
+    {
+        var commands = new List<PaletteCommand>();
+        var pages = new[] { "dashboard", "editor", "profiles", "sessions", "settings" };
+        for (int i = 0; i < pages.Length; i++)
+        {
+            string page = pages[i];
+            commands.Add(new(Loc.Inst["nav." + page], $"Alt + {i + 1}", page, () => GoTo(page)));
+        }
+        commands.Add(new(Loc.Inst["tray.toggleHud"], "", "hud overlay", () => OnToggleHud(this, new RoutedEventArgs())));
+        if (_services.IsRecording || _services.Telemetry.Capturing)
+            commands.Add(new(Loc.Inst["tray.toggleRecording"], "", "record session", ToggleRecordingHotkey));
+        var palette = new CommandPalette(this, commands);
+        if (palette.ShowDialog() == true) palette.SelectedCommand?.Execute();
     }
 
     // ------------------------------------------------------------- chrome
 
     private void UpdateChrome()
     {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(UpdateChrome)); return; }
         var telemetry = _services.Telemetry;
         bool elevated = _services.IsElevated;
         bool capture = telemetry.Capture.IsRunning;
@@ -268,6 +343,7 @@ public partial class MainWindow : Window
 
     private void OnClosing(object? sender, CancelEventArgs e)
     {
+        if (!_forceClose && _services.Updates.Phase == UpdatePhase.Preparing) { e.Cancel = true; return; }
         SaveWindowPlacement();
         if (_forceClose) return;
         if (_services.Settings.Current.CloseToTray)

@@ -39,7 +39,7 @@
 
         <StackPanel Grid.Row="2" Margin="20,12,20,20">
             <Border Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}"
-                    BorderThickness="1" CornerRadius="8" Height="300">
+                    BorderThickness="1" CornerRadius="0" Height="300">
                 <ListBox x:Name="ProcessList" Margin="4" MouseDoubleClick="OnListDoubleClick">
                     <ListBox.ItemTemplate>
                         <DataTemplate>

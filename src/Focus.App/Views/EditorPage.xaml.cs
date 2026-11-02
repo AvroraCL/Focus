@@ -276,6 +276,10 @@ public partial class EditorPage : UserControl
     // ------------------------------------------------------------- saving
 
     private void OnSave(object sender, RoutedEventArgs e) => SaveInternal(silent: false);
+    public void FlushPendingSave()
+    {
+        if (_dirty) SaveInternal(silent: true);
+    }
 
     private void SaveInternal(bool silent)
     {
@@ -446,6 +450,7 @@ public partial class EditorPage : UserControl
 
     private void UpdateStatus()
     {
+        EmptyCanvasHint.Visibility = _profile.Elements.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         StatusCanvasText.Text = $"{_profile.CanvasWidth:F0} × {_profile.CanvasHeight:F0}";
         StatusSelectionText.Text = _selection.Count == 0
             ? Loc.Inst["editor.noSelection"]
@@ -803,6 +808,26 @@ public partial class EditorPage : UserControl
         AfterEdit();
     }
 
+    private GridLength _layerWidth = new(184);
+    private GridLength _propertyWidth = new(280);
+    private void OnFocusCanvasChanged(object sender, RoutedEventArgs e)
+    {
+        if (LayerPanel is null || PropertyPanel is null) return;
+        bool focus = FocusCanvasToggle.IsChecked == true;
+        if (focus)
+        {
+            _layerWidth = LayerColumn.Width;
+            _propertyWidth = PropertyColumn.Width;
+        }
+        LayerColumn.MinWidth = focus ? 0 : 160;
+        PropertyColumn.MinWidth = focus ? 0 : 240;
+        LayerColumn.Width = focus ? new GridLength(0) : _layerWidth;
+        PropertyColumn.Width = focus ? new GridLength(0) : _propertyWidth;
+        LayerPanel.Visibility = PropertyPanel.Visibility = LeftResize.Visibility = RightResize.Visibility =
+            focus ? Visibility.Collapsed : Visibility.Visible;
+        Canvas.Focus();
+    }
+
     // ------------------------------------------------------------- keyboard
 
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -821,6 +846,13 @@ public partial class EditorPage : UserControl
         if (ctrl && e.Key == Key.S)
         {
             SaveInternal(silent: false);
+            e.Handled = true;
+            return;
+        }
+
+        if (ctrl && shift && e.Key == Key.F)
+        {
+            FocusCanvasToggle.IsChecked = FocusCanvasToggle.IsChecked != true;
             e.Handled = true;
             return;
         }
